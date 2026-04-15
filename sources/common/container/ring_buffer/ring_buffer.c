@@ -1,0 +1,141 @@
+﻿// Khai báo thư viện sử dụng
+#include <stdbool.h>
+#include <stdlib.h>
+#include "ring_buffer.h"
+
+// Hàm khởi tạo vòng đệm
+void ring_buffer_init(ring_buffer_t* ring_buffer, void* buffer, uint16_t buffer_size, uint16_t element_size) {
+	ring_buffer->tail_index = 0;
+	ring_buffer->head_index = 0;
+	ring_buffer->fill_size = 0;
+
+	ring_buffer->buffer_size = buffer_size;
+	ring_buffer->buffer = (uint8_t*)buffer;
+	ring_buffer->element_size = element_size;
+}
+
+// Hàm lấy số lượng phần tử có thể chứa trong vòng đệm
+uint16_t ring_buffer_availble(ring_buffer_t* ring_buffer) {
+	return ring_buffer->fill_size;
+}
+
+// Hàm kiểm tra vòng đệm có rỗng hay không
+bool ring_buffer_is_empty(ring_buffer_t* ring_buffer) {
+	return (ring_buffer->fill_size == 0) ? true : false;
+}
+
+// Hàm kiểm tra vòng đệm có đầy hay không
+bool ring_buffer_is_full(ring_buffer_t* ring_buffer) {
+	return (ring_buffer->fill_size == ring_buffer->buffer_size) ? true : false;
+}
+
+// Hàm thêm phần tử vào vòng đệm
+uint8_t ring_buffer_put(ring_buffer_t* ring_buffer, void* data) {
+	uint16_t next_tail_index;
+	uint16_t next_head_index;
+
+	if (data != NULL) {
+		memcpy((uint8_t*)(ring_buffer->buffer + ring_buffer->tail_index * ring_buffer->element_size), (uint8_t*)data, ring_buffer->element_size);
+
+		next_tail_index = (++ring_buffer->tail_index) % ring_buffer->buffer_size;
+		ring_buffer->tail_index = next_tail_index;
+
+		if (ring_buffer->fill_size == ring_buffer->buffer_size) {
+			next_head_index = (++ring_buffer->head_index) % ring_buffer->buffer_size;
+			ring_buffer->head_index = next_head_index;
+		}
+		else {
+			ring_buffer->fill_size++;
+		}
+	}
+	else {
+		return RET_RING_BUFFER_NG;
+	}
+
+	return RET_RING_BUFFER_OK;
+}
+
+// Hàm lấy phần tử ra khỏi vòng đệm
+uint8_t ring_buffer_get(ring_buffer_t* ring_buffer, void* data) {
+	uint16_t next_head_index;
+
+	if (ring_buffer_is_empty(ring_buffer)) {
+		return RET_RING_BUFFER_NG;
+	}
+
+	if (data != NULL) {
+		memcpy((uint8_t*)data, (uint8_t*)(ring_buffer->buffer + ring_buffer->head_index * ring_buffer->element_size), ring_buffer->element_size);
+
+		next_head_index = (++ring_buffer->head_index) % ring_buffer->buffer_size;
+		ring_buffer->head_index = next_head_index;
+
+		ring_buffer->fill_size--;
+	}
+	else {
+		return RET_RING_BUFFER_NG;
+	}
+
+	return RET_RING_BUFFER_OK;
+}
+
+// Các hàm xử lý vòng đệm đặc biệt cho kiểu char
+void ring_buffer_char_init(ring_buffer_char_t* ring_buffer, void* buffer, uint16_t buffer_size) {
+	ring_buffer->tail_index = 0;
+	ring_buffer->head_index = 0;
+	ring_buffer->fill_size = 0;
+
+	ring_buffer->buffer_size = buffer_size;
+	ring_buffer->buffer = (uint8_t*)buffer;
+}
+
+// Hàm lấy số lượng phần tử có thể chứa trong vòng đệm
+uint16_t ring_buffer_char_availble(ring_buffer_char_t* ring_buffer) {
+	return ring_buffer->fill_size;
+}
+
+// Hàm kiểm tra vòng đệm có rỗng hay không
+bool ring_buffer_char_is_empty(ring_buffer_char_t* ring_buffer) {
+	return (ring_buffer->fill_size == 0) ? true : false;
+}
+
+// Hàm kiểm tra vòng đệm có đầy hay không
+bool ring_buffer_char_is_full(ring_buffer_char_t* ring_buffer) {
+	return (ring_buffer->fill_size == ring_buffer->buffer_size) ? true : false;
+}
+
+// Hàm thêm phần tử vào vòng đệm
+void ring_buffer_char_put(ring_buffer_char_t* ring_buffer, uint8_t c) {
+	uint16_t next_tail_index;
+	uint16_t next_head_index;
+
+	ring_buffer->buffer[ring_buffer->tail_index] = c;
+
+	next_tail_index = (++ring_buffer->tail_index) % ring_buffer->buffer_size;
+	ring_buffer->tail_index = next_tail_index;
+
+	if (ring_buffer->fill_size == ring_buffer->buffer_size) {
+		next_head_index = (++ring_buffer->head_index) % ring_buffer->buffer_size;
+		ring_buffer->head_index = next_head_index;
+	}
+	else {
+		ring_buffer->fill_size++;
+	}
+}
+
+// Hàm lấy phần tử ra khỏi vòng đệm
+uint8_t	ring_buffer_char_get(ring_buffer_char_t* ring_buffer) {
+	uint16_t ret = 0;
+	uint16_t next_head_index;
+
+	if (ring_buffer->fill_size) {
+		ret = ring_buffer->buffer[ring_buffer->head_index];
+
+		next_head_index = (++ring_buffer->head_index) % ring_buffer->buffer_size;
+		ring_buffer->head_index = next_head_index;
+
+		ring_buffer->fill_size--;
+	}
+
+	return ret;
+}
+
