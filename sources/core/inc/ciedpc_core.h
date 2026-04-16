@@ -1,4 +1,14 @@
-﻿#ifndef __CIEDPC_CORE_H__
+﻿/**
+ * @file ciedpc_core.h
+ * @author Shang Huang
+ * @brief Core definitions and utilities for CIEDPC system
+ * @version 0.1
+ * @date 2026-04-16
+ * 
+ * @copyright MIT License
+ * 
+ */
+#ifndef __CIEDPC_CORE_H__
   #define __CIEDPC_CORE_H__
 
   #ifdef __cplusplus
@@ -15,6 +25,13 @@
      * @brief Định nghĩa phiên bản của hệ thống CIEDPC
      */
     #define CIEDPC_VERSION						"0.0.1"
+
+    /**
+     * @brief Định nghĩa cờ debug cho hệ thống CIEDPC
+     */
+    #ifndef CIEDPC_DEBUG_FLAG
+      #define CIEDPC_DEBUG_FLAG				(0x00u) // Tắt chế độ debug theo mặc định
+    #endif
 
     /**
      * @brief Định nghĩa các hằng số boolean và trạng thái cơ bản cho hệ thống CIEDPC

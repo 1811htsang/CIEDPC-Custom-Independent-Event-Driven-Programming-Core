@@ -1,35 +1,112 @@
-#ifndef __FSM_H__
-	#define __FSM_H__
+/**
+ * @file ciedpc_fsm.h
+ * @author Shang Huang
+ * @brief Finite State Machine definitions and utilities for CIEDPC system
+ * @version 0.1
+ * @date 2026-04-16
+ * 
+ * @copyright MIT License
+ * 
+ */
+#ifndef __CIEDPC_FSM_H__
+	#define __CIEDPC_FSM_H__
 
-	// Khai báo C directive cho C++ 
 	#ifdef __cplusplus
 	extern "C"
 	{
 	#endif
 
-		// Khai báo thư viện sử dụng
+		/**
+		 * @brief Khai báo thư viện sử dụng
+		 */
 		#include <stdint.h>
+		#include "ciedpc_core.h"
 
-		/* Forward declaration to avoid cyclic include with ak.h/message.h. */
-		typedef struct ak_msg_t ak_msg_t;
+		/**
+		 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống CIEDPC
+		 * @attention `ciedpc_msg_t` được gọi ở đây để thực thi forward declaration, 
+		 * 						cho phép sử dụng con trỏ đến `ciedpc_msg_t` trong các khai báo sau này
+		 */
+		typedef struct ciedpc_msg_t ciedpc_msg_t;
 
-		// Khai báo macro cho máy trạng thái hữu hạn (FSM)
-		#define FSM(me, init_func)		((fsm_t*)me)->state = (state_handler)init_func
-		#define FSM_TRAN(me, target)	((fsm_t*)me)->state = (state_handler)target
+		/**
+		 * @brief Các tín hiệu đặc biệt dành cho quản lý vòng đời trạng thái
+		 * @attention Các tín hiệu này được thiết kế tuân thủ theo encoding `0xBx`,
+		 *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
+		 *            cho phép hệ thống CIEDPC quản lý tối đa 16 tín hiệu đặc biệt 
+		 * 						khác nhau để điều khiển vòng đời của trạng thái trong FSM,
+		 */
+		#define CIEDPC_FSM_SIG_ENTRY    (0xB0u)
+		#define CIEDPC_FSM_SIG_EXIT     (0xB1u)
+		#define CIEDPC_FSM_SIG_INIT     (0xB2u)
 
-		// Khai báo con trỏ hàm
-		typedef void (*state_handler)(ak_msg_t* msg);
+		/**
+		 * @brief Số lượng trạng thái tối đa trong lịch sử của FSM
+		 */
+		#define CIEDPC_FSM_HIS_MAX 			(4u) 
 
-		// Khai báo cấu trúc FSM
-		typedef struct {
-			state_handler state;
-		} fsm_t;
+		/**
+		 * @brief Định nghĩa kiểu hàm xử lý trạng thái trong FSM
+		 * @param msg là con trỏ đến tin nhắn được gửi đến FSM, 
+		 * 				cho phép hàm xử lý trạng thái truy cập và xử lý thông tin từ tin nhắn đó 
+		 * 				để thực hiện các hành động tương ứng dựa trên nội dung của tin nhắn và trạng thái hiện tại của FSM.
+		 */
+		typedef void (*state_handler)(ciedpc_msg_t* msg);
 
-		// Khai báo hàm để xử lý tin nhắn trong FSM
-		void fsm_dispatch(fsm_t* me, ak_msg_t* msg);
+		/**
+		 * @brief Định nghĩa cấu trúc để quản lý thông tin của FSM trong hệ thống CIEDPC
+		 * @attention `history` không được khai báo vượt quá CIEDPC_FSM_HIS_MAX 
+		 * 						để đảm bảo an toàn bộ nhớ và tránh lỗi tràn bộ nhớ 
+		 * 						khi lưu lịch sử trạng thái của FSM.
+		 */
+		typedef struct ciedpc_fsm_t {
+			state_handler state; // Hàm xử lý trạng thái hiện tại của FSM
+			state_handler history[CIEDPC_FSM_HIS_MAX]; // Mảng lưu lịch sử trạng thái 
+			ui8 history_index; // Chỉ số để quản lý vị trí hiện tại trong lịch sử trạng thái
+			ui8 history_count; // Số lượng trạng thái đã lưu trong lịch sử, giúp quản lý và kiểm soát việc lưu trữ lịch sử trạng thái của FSM
+		} ciedpc_fsm_t;
+
+		/**
+		 * @brief Khởi tạo FSM và thực hiện hành động INIT đầu tiên
+		 */
+		#define ciedpc_fsm_init(me, init_func) \
+    do { \
+			(me)->state = (state_handler)(init_func); \
+			(me)->history_index = 0; \
+			memset((me)->history, 0, sizeof((me)->history)); \
+			ciedpc_msg_t m; \
+			ciedpc_msg_create(&m, CIEDPC_FSM_SIG_INIT); \
+			(me)->state(&m); \
+    } while(0)
+
+		/**
+		 * @brief Khai báo hàm để xử lý tin nhắn và điều hướng trạng thái trong FSM
+		 * @param me chỉ trạng thái hiện tại của FSM
+		 * @param msg chỉ con trỏ đến tin nhắn được gửi đến FSM
+		 */
+		stinl void ciedpc_fsm_dispatch(ciedpc_fsm_t* me, ciedpc_msg_t* msg) {
+			if (me && me->state && msg) {
+				me->state(msg);
+			}
+		}
+
+		/**
+		 * @brief Hàm để chuyển đổi trạng thái của FSM
+		 * 
+		 * @param me chỉ trạng thái hiện tại của FSM
+		 * @param target chỉ hàm xử lý trạng thái mục tiêu mà FSM sẽ chuyển đến
+		 */
+		void ciedpc_fsm_go_next(ciedpc_fsm_t* me, state_handler target);
+
+		/**
+		 * @brief Hàm để quay lại trạng thái trước đó của FSM dựa trên lịch sử đã lưu
+		 * 
+		 * @param me chỉ trạng thái hiện tại của FSM, hàm sẽ sử dụng thông tin trong `history` để quay lại trạng thái trước đó
+		 */
+		void ciedpc_fsm_go_back(ciedpc_fsm_t* me);
 
 	#ifdef __cplusplus
 	}
 	#endif
 
-#endif //__FSM_H__
+#endif //__CIEDPC_FSM_H__

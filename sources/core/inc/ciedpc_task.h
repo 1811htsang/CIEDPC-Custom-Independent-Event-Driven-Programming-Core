@@ -1,4 +1,14 @@
-﻿#ifndef __TASK_H__
+﻿/**
+ * @file ciedpc_task.h
+ * @author Shang Huang
+ * @brief Task management definitions and utilities for CIEDPC system
+ * @version 0.1
+ * @date 2026-04-16
+ * 
+ * @copyright MIT License
+ * 
+ */
+#ifndef __TASK_H__
 	#define __TASK_H__
 
 	#ifdef __cplusplus
@@ -16,18 +26,18 @@
 
 		/**
      * @brief Định nghĩa các hằng số cho ID của tác vụ
-     * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xEx`, 
+     * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xDFx`, 
      *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
      *            cho phép hệ thống CIEDPC quản lý tối đa 16 tác vụ khác nhau, 
      *            bao gồm các tác vụ timer, giao tiếp, hệ thống, debug, người dùng và trống.
      */
-		#define CIEDPC_TASK_MAX_SIZE			 (16u) // 16 tác vụ, từ 0 đến 15
-    #define CIEDPC_TASK_TIM_ID				(0xE0) // Tác vụ timer
-    #define CIEDPC_TASK_IF_ID		      (0xE1) // Tác vụ giao tiếp
-    #define CIEDPC_TASK_SYS_ID				(0xE2) // Tác vụ hệ thống (info + memrp)
-    #define CIEDPC_TASK_DBG_ID				(0xE3) // Tác vụ debug
-    #define CIEDPC_TASK_USR_ID				(0xE4) // Tác vụ người dùng
-    #define CIEDPC_TASK_IDLE_ID				(0xEF) // Tác vụ trống
+		#define CIEDPC_TASK_MAX_SIZE			  (16u) // 16 tác vụ, từ 0 đến 15
+    #define CIEDPC_TASK_TIM_ID				(0xDF0) // Tác vụ timer
+    #define CIEDPC_TASK_IF_ID		      (0xDF1) // Tác vụ giao tiếp
+    #define CIEDPC_TASK_SYS_ID				(0xDF2) // Tác vụ hệ thống (info + memrp)
+    #define CIEDPC_TASK_DBG_ID				(0xDF3) // Tác vụ debug
+    #define CIEDPC_TASK_USR_ID				(0xDF4) // Tác vụ người dùng
+    #define CIEDPC_TASK_IDLE_ID				(0xDFF) // Tác vụ trống
 
 		/**
      * @brief Định nghĩa các hằng số cho mức độ ưu tiên của tác vụ trong hệ thống CIEDPC
@@ -93,10 +103,10 @@
 		/**
 		 * @brief Định nghĩa cấu trúc để quản lý thông tin của tác vụ message-driven
 		 */
-		typedef struct {
-			task_id_t id;						// ID của tác vụ
-			task_pri_t pri;					// Mức ưu tiên của tác vụ
-			pf_task_norm task_norm;	// Hàm thực thi của tác vụ
+		typedef struct task_norm_t {
+			task_id_t id;						
+			task_pri_t pri;					
+			pf_task_norm task_norm;	
 		} task_norm_t;
 
 		/**
@@ -105,7 +115,7 @@
 		 *            cho phép hệ thống CIEDPC xác định và điều phối việc thực thi của các tác vụ polling 
 		 * 						dựa trên khả năng của chúng.
 		 */
-		typedef struct {
+		typedef struct task_polling_t {
 			task_id_t id;									// ID của tác vụ polling
 			ui8 ability;									// Khả năng của tác vụ polling
 			pf_task_polling task_polling;	// Hàm thực thi của tác vụ polling
@@ -154,9 +164,26 @@
 		 */
 		RETR_STAT ciedpc_task_scheduler(); 
 
-		task_id_t ciedpc_task_get_current_id(); // Hàm lấy ID của tác vụ hiện tại đang được thực thi
-		ciedpc_msg_t* ciedpc_task_get_current_msg(); // Hàm lấy tin nhắn hiện tại đang được xử lý bởi tác vụ
-		bool ciedpc_task_is_ready(task_id_t task_id); // Hàm kiểm tra xem tác vụ có sẵn sàng để thực thi hay không
+		/**
+		 * @brief Hàm lấy ID của tác vụ hiện tại đang được thực thi
+		 * @return task_id_t 
+		 */
+		task_id_t ciedpc_task_get_current_id();
+
+		/**
+		 * @brief Hàm lấy tin nhắn hiện tại đang được xử lý bởi tác vụ
+		 * @return ciedpc_msg_t* 
+		 */
+		ciedpc_msg_t* ciedpc_task_get_current_msg();
+
+		/**
+		 * @brief Hàm kiểm tra xem tác vụ có sẵn sàng để thực thi hay không
+		 * 
+		 * @param task_id ID của tác vụ cần kiểm tra
+		 * @return true nếu tác vụ sẵn sàng để thực thi
+		 * @return false nếu tác vụ không sẵn sàng để thực thi
+		 */
+		bool ciedpc_task_is_ready(task_id_t task_id);
 
 	#ifdef __cplusplus
 	}
