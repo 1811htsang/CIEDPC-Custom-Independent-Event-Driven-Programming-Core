@@ -22,7 +22,7 @@
 		#include <stdint.h>
 		#include <stdbool.h>
 		#include "ciedpc_core.h" 
-		#include "queue.h" 
+		#include "fifo.h" 
 
 		/**
      * @brief Định nghĩa các hằng số cho ID của tác vụ
@@ -102,11 +102,16 @@
 
 		/**
 		 * @brief Định nghĩa cấu trúc để quản lý thông tin của tác vụ message-driven
+		 * @param id: ID của tác vụ message-driven
+		 * @param pri: Mức độ ưu tiên của tác vụ message-driven
+		 * @param task_norm: Hàm thực thi của tác vụ message-driven
+		 * @param msg_queue: Hàng đợi tin nhắn của tác vụ message-driven
 		 */
 		typedef struct task_norm_t {
-			task_id_t id;						
-			task_pri_t pri;					
-			pf_task_norm task_norm;	
+			task_id_t id;
+			task_pri_t pri;
+			pf_task_norm task_norm;
+			fifo_t msg_queue; 
 		} task_norm_t;
 
 		/**

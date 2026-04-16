@@ -35,6 +35,14 @@
 
 		/**
 		 * @brief Cấu trúc quản lý tin nhắn trong hệ thống CIEDPC
+		 * @param next: Con trỏ đến tin nhắn tiếp theo trong danh sách liên kết
+		 * @param src_task_id: ID của tác vụ nguồn gửi tin nhắn
+		 * @param des_task_id: ID của tác vụ đích nhận tin nhắn
+		 * @param sig: Tín hiệu của tin nhắn, dùng để xác định loại tin nhắn và hành động cần thực hiện
+		 * @param type: Loại Pool tin nhắn, dùng để xác định cách quản lý bộ nhớ cho tin nhắn
+		 * @param ref_count: Số lượng tham chiếu đến tin nhắn, dùng để quản lý việc giải phóng bộ nhớ khi tin nhắn được gửi đến nhiều tác vụ
+		 * @param data: Con trỏ đến vùng dữ liệu chứa payload của tin nhắn, kích thước và cách quản lý phụ thuộc vào loại Pool tin nhắn
+		 * @param interface: Metadata hỗ trợ cho việc quản lý tin nhắn từ các interface, bao gồm thông tin về nguồn và tín hiệu của tin nhắn
 		 */
 		typedef struct ciedpc_msg_t {
 			/* Quản lý danh sách (Linker) */
@@ -65,7 +73,23 @@
 		} ciedpc_msg_t;
 
 		/**
+		 * @brief Cấu trúc quản lý tin nhắn từ ngữ cảnh ISR
+		 * @param des_task_id: ID của tác vụ đích nhận tin nhắn từ ISR
+		 * @param sig: Tín hiệu của tin nhắn từ ISR
+		 */
+		typedef struct ciedpc_msg_isr_t {
+			ui8 des_task_id; 	
+			ui8 sig; 					
+		} ciedpc_msg_isr_t;
+
+		/**
+		 * @brief Hàm khởi tạo Queue tin nhắn
+		 */
+		void ciedpc_msg_queue_init();
+
+		/**
 		 * @brief Hàm cấp phát tin nhắn duy nhất (UMI)
+		 * @param des_task_id: ID của tác vụ đích nhận tin nhắn
 		 * @param sig: Tín hiệu của tin nhắn
 		 * @param size: Kích thước dữ liệu yêu cầu (0 nếu là tin nhắn thuần túy)
 		 * @return ciedpc_msg_t*: Con trỏ tin nhắn hoặc NULL nếu hết bộ nhớ

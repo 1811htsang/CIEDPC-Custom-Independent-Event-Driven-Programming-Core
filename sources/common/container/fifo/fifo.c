@@ -1,10 +1,17 @@
-﻿// Khai báo thư viện sử dụng
-#include "fifo.h"
+﻿/**
+ * @file fifo.c
+ * @author Shang Huang
+ * @brief Implementation of FIFO (First-In-First-Out) queue for CIEDPC system
+ * @version 0.1
+ * @date 2026-04-16
+ * 
+ * @copyright MIT License
+ * 
+ */
 #include <stdbool.h>
 #include <stdlib.h>
-#include "sys_dbg.h"
+#include "fifo.h"
 
-// Hàm khởi tạo FIFO
 void fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t element_size) {
 	fifo->tail_index = 0;
 	fifo->head_index = 0;
@@ -16,7 +23,7 @@ void fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t elemen
 }
 
 // Hàm lấy số lượng phần tử có thể chứa trong FIFO
-uint32_t fifo_availble(fifo_t* fifo) {
+uint32_t fifo_available(fifo_t* fifo) {
 	return fifo->fill_size;
 }
 

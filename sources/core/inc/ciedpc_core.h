@@ -102,6 +102,16 @@
 			STAT_RDY      = STAT_OK
 		} RETR_STAT;
 
+    /**
+     * @brief Định nghĩa mã lỗi cho hệ thống CIEDPC
+     * 
+     */
+    #define CIEDPC_ERR_MSG_POOL   (0x01u) // Lỗi liên quan đến quản lý Pool tin nhắn
+    #define CIEDPC_ERR_TASK       (0x02u) // Lỗi liên quan đến quản lý tác vụ
+    #define CIEDPC_ERR_SCHEDULER  (0x03u) // Lỗi liên quan đến bộ lập lịch tác vụ
+    #define CIEDPC_ERR_INTERFACE  (0x04u) // Lỗi liên quan đến quản lý các interface
+    
+
   #ifdef __cplusplus
   }
   #endif

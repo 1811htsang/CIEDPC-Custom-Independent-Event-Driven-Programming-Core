@@ -15,6 +15,8 @@
 #include <stdbool.h>
 #include "ciedpc_core.h"
 #include "ciedpc_msg.h"
+#include "ciedpc_task.h"
+#include "fifo.h"
 
 /**
  * @brief Khai báo các hằng số cho kích thước của các Pool tin nhắn
@@ -23,33 +25,39 @@
  * 						mỗi tin nhắn có thể chứa tối đa 8 bytes dữ liệu, mỗi bytes được chia ra như thế nào phụ thuộc vào đầu vào data_size khi khởi tạo pool
  */
 
-#ifndef CIEDPC_MSG_BLANK_POOL_SIZE
-	#define CIEDPC_MSG_BLANK_POOL_SIZE  (8u) 	// units
+#ifndef CIEDPC_MSG_BLANK_QUEUE_SIZE
+	#define CIEDPC_MSG_BLANK_QUEUE_SIZE  (8u) 	// units
 #endif // -> equipvalent to 8 * 32 = 256 bytes
 
-#ifndef CIEDPC_MSG_NORM_POOL_SIZE
-	#define CIEDPC_MSG_NORM_POOL_SIZE   (12u) 	// units
+#ifndef CIEDPC_MSG_NORM_QUEUE_SIZE
+	#define CIEDPC_MSG_NORM_QUEUE_SIZE   (8u) 	// units
 #endif 
 
 #ifndef CIEDPC_MSG_NORM_DATA_MAX
-	#define CIEDPC_MSG_NORM_DATA_MAX    (8u) 	// bytes
-#endif // -> equipvalent to 12 * (8 + sizeof(ciedpc_msg_t)) = 12 * (8 + 32) = 432 bytes
+	#define CIEDPC_MSG_NORM_DATA_MAX    (8u) 		// bytes
+#endif // -> equipvalent to 8 * (8 + sizeof(ciedpc_msg_t)) = 8 * (8 + 32) = 320 bytes
 
-#ifndef CIEDPC_MSG_ALLOC_POOL_SIZE
-	#define CIEDPC_MSG_ALLOC_POOL_SIZE  (8u)  	// units
+#ifndef CIEDPC_MSG_ALLOC_QUEUE_SIZE
+	#define CIEDPC_MSG_ALLOC_QUEUE_SIZE  (12u)  // units
 #endif
 
 #ifndef CIEDPC_MSG_ALLOC_DATA_MAX
-	#define CIEDPC_MSG_ALLOC_DATA_MAX   (8u) 	// bytes
-#endif // -> equipvalent to 8 * (8 + sizeof(ciedpc_msg_t)) = 8 * (8 + 32) = 320 bytes
+	#define CIEDPC_MSG_ALLOC_DATA_MAX   (8u) 		// bytes
+#endif // -> equipvalent to 12 * (8 + sizeof(ciedpc_msg_t)) = 12 * (8 + 32) = 480 bytes
 
-#ifndef CIEDPC_MSG_EXTAL_POOL_SIZE
-	#define CIEDPC_MSG_EXTAL_POOL_SIZE  (8u) 		// units
+#ifndef CIEDPC_MSG_EXTAL_QUEUE_SIZE
+	#define CIEDPC_MSG_EXTAL_QUEUE_SIZE  (16u) 	// units
 #endif
 
 #ifndef CIEDPC_MSG_EXTAL_DATA_MAX
-	#define CIEDPC_MSG_EXTAL_DATA_MAX   (8u) 	// bytes
-#endif // -> equipvalent to 8 * (8 + sizeof(ciedpc_msg_t)) = 8 * (8 + 32) = 320 bytes
+	#define CIEDPC_MSG_EXTAL_DATA_MAX   (8u) 		// bytes
+#endif // -> equipvalent to 16 * (8 + sizeof(ciedpc_msg_t)) = 16 * (8 + 32) = 640 bytes
+
+#ifndef CIEDPC_MSG_ISR_QUEUE_SIZE
+	#define CIEDPC_MSG_ISR_QUEUE_SIZE   (16u) 	// units
+#endif
+
+
 
 /**
  * @brief Khai báo cấu trúc quản lý Pool tin nhắn
@@ -66,19 +74,22 @@ typedef struct ciedpc_msg_pool_header_t {
  */
 
 CIEDPC_ATTR_SECTION(".ciedpc_msg_blank_pool") ciedpc_msg_pool_header_t g_blank_pool_ctrl;
-CIEDPC_ATTR_SECTION(".ciedpc_msg_blank_pool") static ciedpc_msg_t blank_pool[CIEDPC_MSG_BLANK_POOL_SIZE];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_blank_pool") static ciedpc_msg_t blank_pool[CIEDPC_MSG_BLANK_QUEUE_SIZE];
 
 CIEDPC_ATTR_SECTION(".ciedpc_msg_norm_pool") ciedpc_msg_pool_header_t g_norm_pool_ctrl;
-CIEDPC_ATTR_SECTION(".ciedpc_msg_norm_pool") static ciedpc_msg_t norm_pool[CIEDPC_MSG_NORM_POOL_SIZE];
-CIEDPC_ATTR_SECTION(".ciedpc_msg_norm_pool") static ui8 norm_pool_data[CIEDPC_MSG_NORM_POOL_SIZE][CIEDPC_MSG_NORM_DATA_MAX];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_norm_pool") static ciedpc_msg_t norm_pool[CIEDPC_MSG_NORM_QUEUE_SIZE];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_norm_pool") static ui8 norm_pool_data[CIEDPC_MSG_NORM_QUEUE_SIZE][CIEDPC_MSG_NORM_DATA_MAX];
 
 CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") ciedpc_msg_pool_header_t g_alloc_pool_ctrl;
-CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") static ciedpc_msg_t alloc_pool[CIEDPC_MSG_ALLOC_POOL_SIZE];
-CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") static ui8 alloc_pool_data[CIEDPC_MSG_ALLOC_POOL_SIZE][CIEDPC_MSG_ALLOC_DATA_MAX];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") static ciedpc_msg_t alloc_pool[CIEDPC_MSG_ALLOC_QUEUE_SIZE];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") static ui8 alloc_pool_data[CIEDPC_MSG_ALLOC_QUEUE_SIZE][CIEDPC_MSG_ALLOC_DATA_MAX];
 
 CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") ciedpc_msg_pool_header_t g_extal_pool_ctrl;
-CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") static ciedpc_msg_t extal_pool[CIEDPC_MSG_EXTAL_POOL_SIZE];
-CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") static ui8 extal_pool_data[CIEDPC_MSG_EXTAL_POOL_SIZE][CIEDPC_MSG_EXTAL_DATA_MAX];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") static ciedpc_msg_t extal_pool[CIEDPC_MSG_EXTAL_QUEUE_SIZE];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") static ui8 extal_pool_data[CIEDPC_MSG_EXTAL_QUEUE_SIZE][CIEDPC_MSG_EXTAL_DATA_MAX];
+
+CIEDPC_ATTR_SECTION(".ciedpc_msg_isr_pool") static fifo_t isr_pool;
+CIEDPC_ATTR_SECTION(".ciedpc_msg_isr_pool") static ciedpc_msg_isr_t isr_pool_buffer[CIEDPC_MSG_ISR_QUEUE_SIZE];
 
 /**
  * @brief Khai báo các hàm quản lý nội bộ
@@ -90,31 +101,112 @@ sta void internal_ciedpc_msg_pool_init(
 	ciedpc_msg_type_t pool_type,
 	ui8 units, ui16 data_size, ui16 data_max
 );
-sta ciedpc_msg_t* internal_ciedpc_msg_pop_free(ciedpc_msg_pool_header_t* header);
-sta void internal_ciedpc_msg_push_free(ciedpc_msg_pool_header_t* header, ciedpc_msg_t* msg);
+sta ciedpc_msg_t* internal_ciedpc_msg_pool_pop(ciedpc_msg_pool_header_t* header);
+sta void internal_ciedpc_msg_pool_push(ciedpc_msg_pool_header_t* header, ciedpc_msg_t* msg);
 sta ciedpc_msg_pool_header_t* internal_ciedpc_msg_find_best_pool(ui16 size);
-sta void ciedpc_msg_drain_isr_queue(void);
+sta void ciedpc_msg_drain_isr_pool(void);
 sta bool ciedpc_msg_is_valid_ptr(ciedpc_msg_t* msg);
 sta void internal_ciedpc_msg_pool_panic(ui8 pool_id);
 
-ciedpc_msg_t* ciedpc_msg_alloc(ui8 des_task_id, ui8 sig, ui16 size) {
+void ciedpc_msg_pool_init() {
+	// Khởi tạo BLANK Pool
+	internal_ciedpc_msg_pool_init(
+		&g_blank_pool_ctrl, blank_pool, NULL, CIEDPC_MSG_TYPE_BLANK, 
+		CIEDPC_MSG_BLANK_QUEUE_SIZE, 0, 0
+	);
+	// Khởi tạo NORM Pool
+	internal_ciedpc_msg_pool_init(
+		&g_norm_pool_ctrl, norm_pool, norm_pool_data, CIEDPC_MSG_TYPE_NORM,
+		CIEDPC_MSG_NORM_QUEUE_SIZE, CIEDPC_MSG_NORM_DATA_MAX, 0
+	);
+	// Khởi tạo ALLOC Pool
+	internal_ciedpc_msg_pool_init(
+		&g_alloc_pool_ctrl, alloc_pool, alloc_pool_data, CIEDPC_MSG_TYPE_ALLOC,
+		CIEDPC_MSG_ALLOC_QUEUE_SIZE, CIEDPC_MSG_ALLOC_DATA_MAX, 0
+	);
+	// Khởi tạo EXTAL Pool
+	internal_ciedpc_msg_pool_init(
+		&g_extal_pool_ctrl, extal_pool, extal_pool_data, CIEDPC_MSG_TYPE_EXTAL,
+		CIEDPC_MSG_EXTAL_QUEUE_SIZE, CIEDPC_MSG_EXTAL_DATA_MAX, 0
+	);
 
+	// Khởi tạo ISR Pool
+	fifo_init(
+		&isr_pool, (void*)isr_pool_buffer, 
+		CIEDPC_MSG_ISR_QUEUE_SIZE, sizeof(ciedpc_msg_isr_t)
+	);
+}
+
+ciedpc_msg_t* ciedpc_msg_alloc(ui8 des_task_id, ui8 sig, ui16 size) {
+	ciedpc_msg_t *msg = NULL;
+	ciedpc_msg_pool_header_t* pool_header = internal_ciedpc_msg_find_best_pool(size);
+
+	if (pool_header == NULL) {
+		return NULL;
+	}
+
+	pal_enter_critical(); // Đảm bảo an toàn khi truy cập Pool trong môi trường đa tác vụ hoặc ISR
+	msg = internal_ciedpc_msg_pool_pop(pool_header);
+	pal_exit_critical();
+
+	if (msg != NULL) {
+		msg->src_task_id = ciedpc_task_get_current_id();
+		msg->des_task_id = des_task_id;
+		msg->sig = sig;
+		msg->ref_count = 1; // mặc định 1 tham chiếu khi tạo mới
+	} else {
+		// Pool đã hết, có thể log lỗi hoặc thực hiện hành động khắc phục
+		internal_ciedpc_msg_pool_panic(pool_header - &g_blank_pool_ctrl); // Tính toán pool_id dựa trên offset
+	}
+
+	return msg;
 }
 
 void ciedpc_msg_free(ciedpc_msg_t* msg) {
+	if (!msg || !ciedpc_msg_is_valid_ptr(msg)) return;
 
+	msg->next = NULL;
+
+	ciedpc_msg_pool_header_t* header = NULL;
+	
+	switch (msg->type) {
+		case CIEDPC_MSG_TYPE_BLANK:
+			header = &g_blank_pool_ctrl;
+			break;
+		case CIEDPC_MSG_TYPE_NORM:
+			header = &g_norm_pool_ctrl;
+			break;
+		case CIEDPC_MSG_TYPE_ALLOC:
+			header = &g_alloc_pool_ctrl;
+			break;
+		case CIEDPC_MSG_TYPE_EXTAL:
+			header = &g_extal_pool_ctrl;
+			break;
+		default:
+			return; // Loại tin nhắn không hợp lệ, không thực hiện giải phóng
+			break;
+	}
+
+	pal_enter_critical(); // Đảm bảo an toàn khi truy cập Pool trong môi trường đa tác vụ hoặc ISR
+	internal_ciedpc_msg_pool_push(header, msg);
+	pal_exit_critical();
 }
 
 void ciedpc_msg_ref_inc(ciedpc_msg_t* msg) {
-
+	msg->ref_count++;
 }
 
 void ciedpc_msg_ref_dec(ciedpc_msg_t* msg) {
-
+	msg->ref_count--;
+	if (msg->ref_count == 0) {
+		ciedpc_msg_free(msg);
+	}
 }
 
 void ciedpc_msg_set_data(ciedpc_msg_t* msg, const ui8* data, ui16 size) {
-
+	if (msg->data != NULL && size > 0) {
+		memcpy(msg->data, data, size);
+	}
 }
 
 /**
@@ -137,7 +229,9 @@ void internal_ciedpc_msg_pool_init(
 	}
 
 	// Kiểm tra nếu pool_type không phải là CIEDPC_MSG_TYPE_BLANK mà data_mem lại NULL thì coi như không phù hợp và trả về
-	if (pool_type != CIEDPC_MSG_TYPE_BLANK && !data_mem) return;
+	if (pool_type != CIEDPC_MSG_TYPE_BLANK && !data_mem) {
+		return;
+	}
 
 	/**
 	 * @brief Kiểm tra nếu data_size là 0 hoặc kích thước phân bố dữ liệu không phù hợp với data_size
@@ -146,6 +240,7 @@ void internal_ciedpc_msg_pool_init(
 	 * 				nếu data_size là 0 hoặc data_size lớn hơn 8 bytes thì sẽ không khởi tạo Pool.
 	 * 				Ngoài ra nếu data_size không phải là bội số của data_max thì cũng sẽ không khởi tạo Pool vì
 	 * 				sẽ dẫn đến việc phân bố dữ liệu	không đều.
+	 * @extends Việc quản lý data_size và data_max nhằm đảm bảo
 	 */
 	if (data_size > 0 && (data_max % data_size != 0 || data_size > data_max)) {
 		return;
@@ -173,8 +268,11 @@ void internal_ciedpc_msg_pool_init(
 				/**
 				 * @brief Mỗi tin nhắn sẽ sở hữu một vùng nhớ bắt đầu từ:
 				 * 				Địa chỉ gốc + (số thứ tự tin nhắn * kích thước ô nhớ)
+				 * @attention Lưu ý rằng [0][0-7], [1][8-15], ... Đây chính là nguyên lý trải phẳng của mảng 2 chiều thành mảng 1 chiều, 
+				 * 						giúp việc quản lý bộ nhớ trở nên đơn giản và hiệu quả hơn.
 				 */
 				pool[index].data = data_mem + (index * data_size);
+
 				// Xóa sạch vùng dữ liệu
 				memset(pool[index].data, 0, data_size);
 		} else {
@@ -191,12 +289,33 @@ void internal_ciedpc_msg_pool_init(
 }
 
 /**
- * @brief Lấy một tin nhắn trống từ Pool
+ * @brief Lấy một tin nhắn từ Pool
  * 
  * @param header Chứa thông tin quản lý của Pool
  */
-ciedpc_msg_t* internal_ciedpc_msg_pop_free(ciedpc_msg_pool_header_t* header) {
+ciedpc_msg_t* internal_ciedpc_msg_pool_pop(ciedpc_msg_pool_header_t* header) {
+	if (!header || !header->free_list) {
+		return NULL; // Pool trống hoặc không hợp lệ
+	}
 
+	// Lấy tin nhắn từ đầu danh sách liên kết
+	ciedpc_msg_t* msg = header->free_list;
+
+	// Cập nhật con trỏ đầu của danh sách liên kết
+	header->free_list = msg->next;
+
+	// Cập nhật số lượng tin nhắn đang được sử dụng
+	header->used_count++;
+
+	// Cập nhật số lượng tin nhắn tối đa đã từng được sử dụng (dùng cho debug và tối ưu hóa)
+	if (header->used_count > header->max_used) {
+		header->max_used = header->used_count;
+	}
+
+	// Ngắt liên kết của tin nhắn với danh sách liên kết
+	msg->next = NULL;
+
+	return msg;
 }
 
 /**
@@ -205,8 +324,22 @@ ciedpc_msg_t* internal_ciedpc_msg_pop_free(ciedpc_msg_pool_header_t* header) {
  * @param header Chứa thông tin quản lý của Pool
  * @param msg Con trỏ đến tin nhắn cần trả về Pool
  */
-void internal_ciedpc_msg_push_free(ciedpc_msg_pool_header_t* header, ciedpc_msg_t* msg) {
+void internal_ciedpc_msg_pool_push(ciedpc_msg_pool_header_t* header, ciedpc_msg_t* msg) {
+	if (!header || !msg) {
+		return; // Pool không hợp lệ hoặc tin nhắn không hợp lệ
+	}
 
+	// Ngắt liên kết của tin nhắn với danh sách liên kết (nếu có)
+	msg->next = NULL;
+
+	// Nạp tin nhắn về đầu danh sách liên kết
+	msg->next = header->free_list;
+	header->free_list = msg;
+
+	// Cập nhật số lượng tin nhắn đang được sử dụng
+	if (header->used_count > 0) {
+		header->used_count--;
+	}
 }
 
 /**
@@ -216,15 +349,37 @@ void internal_ciedpc_msg_push_free(ciedpc_msg_pool_header_t* header, ciedpc_msg_
  * @return ciedpc_msg_pool_header_t* Con trỏ đến Pool tin nhắn phù hợp nhất hoặc NULL nếu không có Pool nào phù hợp
  */
 ciedpc_msg_pool_header_t* internal_ciedpc_msg_find_best_pool(ui16 size) {
-
+	if (size == 0) {
+		return &g_blank_pool_ctrl; // Pool Blank
+	} else if (size <= CIEDPC_MSG_NORM_DATA_MAX) {
+		return &g_norm_pool_ctrl; // Pool Norm
+	} else if (size <= CIEDPC_MSG_ALLOC_DATA_MAX) {
+		return &g_alloc_pool_ctrl; // Pool Alloc
+	} else if (size <= CIEDPC_MSG_EXTAL_DATA_MAX) {
+		return &g_extal_pool_ctrl; // Pool Extal
+	} else {
+		return NULL; // Không có Pool nào phù hợp
+	}
 }
 
 /**
  * @brief Xả hàng đợi tin nhắn trong ngữ cảnh ISR để giải phóng các tin nhắn đang bị giữ trong hàng đợi ISR
  * 
  */
-void ciedpc_msg_drain_isr_queue(void) {
+void ciedpc_msg_drain_isr_pool(void) {
+	while (!fifo_is_empty(&isr_pool)) {
+		ciedpc_msg_isr_t msg_isr;
+		fifo_pop(&isr_pool, &msg_isr);
+		
+		ciedpc_msg_t* msg = ciedpc_msg_alloc(msg_isr.des_task_id, msg_isr.sig, 0);
 
+		if (msg) {
+			ciedpc_task_post(msg);
+		} else {
+			// Xử lý tình huống cấp phát tin nhắn thất bại, có thể log lỗi hoặc thực hiện hành động khắc phục
+			internal_ciedpc_msg_pool_panic(CIEDPC_MSG_ISR_QUEUE_SIZE); // Sử dụng một mã lỗi đặc biệt cho Pool ISR
+		}
+	}
 }
 
 /**
@@ -235,13 +390,25 @@ void ciedpc_msg_drain_isr_queue(void) {
  * @return false nếu con trỏ tin nhắn không hợp lệ (không được cấp phát từ bất kỳ Pool tin nhắn nào)
  */
 bool ciedpc_msg_is_valid_ptr(ciedpc_msg_t* msg) {
+	if (!msg) {
+		return false; // Con trỏ NULL không hợp lệ
+	}
 
+	// Kiểm tra xem con trỏ tin nhắn có thuộc về bất kỳ Pool nào không
+	if ((msg >= &blank_pool[0] && msg < &blank_pool[CIEDPC_MSG_BLANK_QUEUE_SIZE]) ||
+			(msg >= &norm_pool[0] && msg < &norm_pool[CIEDPC_MSG_NORM_QUEUE_SIZE]) ||
+			(msg >= &alloc_pool[0] && msg < &alloc_pool[CIEDPC_MSG_ALLOC_QUEUE_SIZE]) ||
+			(msg >= &extal_pool[0] && msg < &extal_pool[CIEDPC_MSG_EXTAL_QUEUE_SIZE])) {
+		return true; // Con trỏ tin nhắn hợp lệ
+	}
+
+	return false; // Con trỏ tin nhắn không hợp lệ
 }
 
 /**
- * @brief Xử lý tình huống khẩn cấp khi Pool tin nhắn bị cạn kiệt
+ * @brief Xử lý tình huống khẩn cấp khi Pool tin nhắn xảy ra vấn đề
  * 
- * @param pool_id ID của Pool tin nhắn bị cạn kiệt
+ * @param pool_id ID của Pool tin nhắn bị lỗi, có thể là CIEDPC_MSG_TYPE_BLANK, CIEDPC_MSG_TYPE_NORM, CIEDPC_MSG_TYPE_ALLOC hoặc CIEDPC_MSG_TYPE_EXTAL
  */
 void internal_ciedpc_msg_pool_panic(ui8 pool_id) {
 
