@@ -18,14 +18,14 @@
  * @brief Khai báo các biến toàn cục quản lý thông tin của các tác vụ trong hệ thống CIEDPC
  */
 
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_norm_t g_current_task; // Cấu trúc quản lý thông tin của tác vụ hiện tại đang được thực thi, bao gồm ID, mức độ ưu tiên, hàm thực thi và hàng đợi tin nhắn của tác vụ đó
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_id_t g_active_task_id = CIEDPC_TASK_IDLE_ID; // ID của tác vụ hiện tại đang được thực thi, được khởi tạo với giá trị của tác vụ trống (idle) để biểu thị rằng hệ thống đang ở trạng thái nhàn rỗi
+CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_norm_t g_current_task_norm; // Cấu trúc quản lý thông tin của tác vụ hiện tại đang được thực thi
+CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_id_t g_active_task_norm_id = CIEDPC_TASK_IDLE_ID; // ID của tác vụ hiện tại đang được thực thi
 CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta ciedpc_msg_t* g_current_msg; // Con trỏ đến tin nhắn hiện tại đang được xử lý bởi tác vụ hiện tại
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_pri_t g_task_ready; // Biến bitmap quản lý trạng thái sẵn sàng của các tác vụ, mỗi bit tương ứng với một mức độ ưu tiên của tác vụ
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_norm_t* g_task_norm_table = NULL;
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_polling_t* g_task_polling_table = NULL;
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta ui8 g_task_norm_count = 0;
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta ui8 g_task_polling_count = 0;
+CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_pri_t g_task_norm_ready; // Biến bitmap quản lý trạng thái sẵn sàng của các tác vụ, mỗi bit tương ứng với một mức độ ưu tiên của tác vụ
+CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_norm_t* g_task_norm_table = NULL; // Bảng thông tin của các tác vụ bình thường
+CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_polling_t* g_task_polling_table = NULL; // Bảng thông tin của các tác vụ polling
+CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta ui8 g_task_norm_count = 0; // Số lượng tác vụ bình thường được đăng ký trong hệ thống
+CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta ui8 g_task_polling_count = 0; // Số lượng tác vụ polling được đăng ký trong hệ thống
 
 sta void internal_ciedpc_task_put_to_queue(task_id_t tid, ciedpc_msg_t* msg);
 sta ciedpc_msg_t* internal_ciedpc_task_get_from_queue(task_id_t tid);
@@ -73,19 +73,51 @@ bool ciedpc_task_is_ready(task_id_t task_id) {
  * 
  * @param tid ID của tác vụ mà tin nhắn sẽ được đưa vào hàng đợi
  * @param msg Con trỏ đến tin nhắn cần đưa vào hàng đợi
+ * @attention Khi gọi hàm này, hãy đảm bảo rằng message queue của tác vụ đã được init trước đó để tránh lỗi
  */
 void internal_ciedpc_task_put_to_queue(task_id_t tid, ciedpc_msg_t* msg) {
+  // Kiểm tra xem tác vụ có tồn tại trong bảng tác vụ hay không
+  task_norm_t* task = internal_get_task_by_id(tid);
+  if (task == NULL) {
+    // Nếu tác vụ không tồn tại, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
+    return;
+  }
 
+  // Kiểm tra fifo của tác vụ đã được khởi tạo chưa
+  if (!fifo_isinit(&task->msg_queue)) {
+    // Nếu fifo chưa được khởi tạo, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
+    return;
+  }
+
+  // Entry critical section
+  pal_entry_critical();
+
+  // Đưa tin nhắn vào hàng đợi của tác vụ
+  fifo_put(&task->msg_queue, msg);
+
+  // Exit critical section
+  pal_exit_critical();
 }
 
 /**
  * @brief Hàm nội bộ để lấy một tin nhắn từ hàng đợi của một tác vụ cụ thể
  * 
  * @param tid ID của tác vụ mà tin nhắn sẽ được lấy từ hàng đợi
+ * @attention Khi gọi hàm này, hãy đảm bảo rằng message queue của tác vụ đã được init trước đó để tránh lỗi
+ *            Kết quả trả về của hàm là blank message, nếu muốn thực hiện nạp data vào msg thì gọi hàm ciedpc_msg_set_data
  * @return ciedpc_msg_t* Con trỏ đến tin nhắn được lấy từ hàng đợi, hoặc NULL nếu hàng đợi trống
  */
 ciedpc_msg_t* internal_ciedpc_task_get_from_queue(task_id_t tid) {
+  task_norm_t* task = internal_get_task_by_id(tid);
+  ciedpc_msg_t* msg_ptr = NULL; // Chỉ cần một con trỏ để hứng giá trị từ FIFO
 
+  if (task && fifo_isinit(&task->msg_queue)) {
+    // fifo_get sẽ copy cái con trỏ msg_t* từ trong buffer ra biến msg_ptr
+    if (fifo_get(&task->msg_queue, &msg_ptr) == RET_FIFO_OK) {
+      return msg_ptr;
+    }
+  }
+  return NULL;
 }
 
 /**
@@ -94,7 +126,20 @@ ciedpc_msg_t* internal_ciedpc_task_get_from_queue(task_id_t tid) {
  * @param pri Mức độ ưu tiên của tác vụ cần thiết lập trạng thái sẵn sàng
  */
 void internal_ciedpc_task_set_ready(task_pri_t pri) {
-	
+  // Kiểm tra xem mức độ ưu tiên có hợp lệ hay không (giả sử mức độ ưu tiên hợp lệ là từ 0 đến 15)
+  if (pri < CIEDPC_TASK_PRI_LEVEL_0 || pri > CIEDPC_TASK_PRI_LEVEL_15) {
+    // Nếu mức độ ưu tiên không hợp lệ, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
+    return;
+  }
+
+  // Bật entry critical section
+  pal_entry_critical();
+
+  // Thiết lập trạng thái sẵn sàng cho tác vụ bằng cách đặt bit tương ứng với mức độ ưu tiên
+  g_task_norm_ready |= (1 << (pri - CIEDPC_TASK_PRI_LEVEL_0));
+
+  // Tắt entry critical section
+  pal_exit_critical();
 }
 
 /**
@@ -103,7 +148,20 @@ void internal_ciedpc_task_set_ready(task_pri_t pri) {
  * @param pri Mức độ ưu tiên của tác vụ cần xóa trạng thái sẵn sàng
  */
 void internal_ciedpc_task_clear_ready(task_pri_t pri) {
+  // Kiểm tra xem mức độ ưu tiên có hợp lệ hay không (giả sử mức độ ưu tiên hợp lệ là từ 0 đến 15)
+  if (pri < CIEDPC_TASK_PRI_LEVEL_0 || pri > CIEDPC_TASK_PRI_LEVEL_15) {
+    // Nếu mức độ ưu tiên không hợp lệ, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
+    return;
+  }
 
+  // Bật entry critical section
+  pal_entry_critical();
+
+  // Xóa trạng thái sẵn sàng cho tác vụ bằng cách xóa bit tương ứng với mức độ ưu tiên
+  g_task_norm_ready &= ~(1 << (pri - CIEDPC_TASK_PRI_LEVEL_0));
+
+  // Tắt entry critical section
+  pal_exit_critical();
 }
 
 /**
@@ -112,7 +170,12 @@ void internal_ciedpc_task_clear_ready(task_pri_t pri) {
  * @return task_pri_t Mức độ ưu tiên cao nhất của các tác vụ đang ở trạng thái sẵn sàng, hoặc 0 nếu không có tác vụ nào sẵn sàng
  */
 task_pri_t internal_ciedpc_task_find_highest_priority(void) {
-	
+  // Kiểm tra nếu không có tác vụ nào sẵn sàng
+  if (g_task_norm_ready == 0) {
+    return 0; // Trả về 0 hoặc một giá trị đặc biệt để biểu thị không có tác vụ nào sẵn sàng
+  }
+
+  return (task_pri_t)(pal_math_get_highest_bit16(g_task_norm_ready) + CIEDPC_TASK_PRI_LEVEL_0);
 }
 
 /**
@@ -120,16 +183,49 @@ task_pri_t internal_ciedpc_task_find_highest_priority(void) {
  * 
  * @param task Con trỏ đến cấu trúc thông tin của tác vụ cần điều phối
  * @param msg Con trỏ đến tin nhắn cần được xử lý bởi tác vụ
+ * @attention Việc kiểm tra priority để xác định tác vụ có được dispatch hay không
+ *            sẽ phụ thuộc vào logic của hàm ciedpc_task_scheduler
  */
 void internal_ciedpc_task_dispatch(task_norm_t* task, ciedpc_msg_t* msg) {
-	
+  // Kiểm tra hợp lệ của task và msg
+  if (task == NULL || msg == NULL) {
+    // Nếu task hoặc msg không hợp lệ, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
+    return;
+  }
+
+  // Cập nhật thông tin về tác vụ hiện tại và tin nhắn hiện tại đang được xử lý
+  g_current_task_norm = *task; // Sao chép thông tin của tác vụ vào biến toàn cục quản lý tác vụ hiện tại
+  g_current_msg = msg; // Cập nhật con trỏ đến tin nhắn hiện tại đang được xử lý
+  g_active_task_norm_id = task->id; // Cập nhật ID của tác vụ hiện tại đang được thực thi
+
+  if (task->fsm.state != NULL) {
+    // Nếu tác vụ có FSM, gọi hàm xử lý trạng thái hiện tại của FSM với tin nhắn làm tham số
+    ciedpc_fsm_dispatch(&task->fsm, msg);
+  } else {
+    task->task_norm(msg); // Nếu tác vụ không có FSM, gọi trực tiếp hàm thực thi của tác vụ với tin nhắn làm tham số
+  }
+
+  // Sau khi thực thi xong, có thể thực hiện các bước dọn dẹp hoặc cập nhật trạng thái nếu cần thiết
+  ciedpc_msg_free(msg); // Giải phóng tin nhắn sau khi đã xử lý xong
+  g_current_msg = NULL; // Đặt con trỏ tin nhắn hiện tại về NULL
+  g_active_task_norm_id = CIEDPC_TASK_IDLE_ID; // Đặt ID của tác vụ hiện tại về ID của tác vụ nhàn rỗi
+  g_current_task_norm = (task_norm_t){0}; // Đặt thông tin của tác vụ hiện tại về giá trị mặc định
 }
 
 /**
  * @brief Hàm nội bộ để thực thi các tác vụ polling có khả năng được bật
  */
 void internal_ciedpc_task_polling_exec(void) {
-	
+  // Duyệt qua bảng tác vụ polling để tìm các tác vụ có khả năng được bật
+  for (ui8 i = 0; i < g_task_polling_count; i++) {
+    task_polling_t* task = &g_task_polling_table[i];
+
+    // Kiểm tra nếu tác vụ có khả năng được bật
+    if (task->ability) {
+      // Thực thi hàm thực thi của tác vụ polling
+      task->task_polling();
+    }
+  }
 }
 
 /**
@@ -139,5 +235,17 @@ void internal_ciedpc_task_polling_exec(void) {
  * @return task_norm_t* Con trỏ đến cấu trúc thông tin của tác vụ nếu tìm thấy, hoặc NULL nếu không tìm thấy
  */
 task_norm_t* internal_get_task_by_id(task_id_t tid) {
+  // Kiểm tra tid hợp lệ
+  if (tid < CIEDPC_TASK_TIM_ID || tid > CIEDPC_TASK_EOT_ID) {
+    return NULL; // Trả về NULL nếu tid không hợp lệ
+  }
 
+  // Duyệt qua bảng tác vụ để tìm tác vụ có ID tương ứng
+  for (ui8 i = 0; i < g_task_norm_count; i++) {
+    if (g_task_norm_table[i].id == tid) {
+      return &g_task_norm_table[i]; // Trả về con trỏ đến tác vụ nếu tìm thấy
+    }
+  }
+
+  return NULL; // Trả về NULL nếu không tìm thấy tác vụ nào có ID tương ứng
 }

@@ -22,6 +22,7 @@
 		#include <stdint.h>
 		#include <stdbool.h>
 		#include "ciedpc_core.h" 
+		#include "ciedpc_fsm.h"
 		#include "fifo.h" 
 
 		/**
@@ -92,11 +93,9 @@
 
 		/**
 		 * @brief Định nghĩa các kiểu dữ liệu để quản lý hàm thực thi của tác vụ
-		 * @attention `pf_task_norm` được sử dụng để quản lý các hàm thực thi của tác vụ theo cơ chế message-driven, 
-		 * 								nơi mỗi tác vụ sẽ được kích hoạt và thực thi dựa trên các tin nhắn mà nó nhận được. 
-		 *            `pf_task_polling` được sử dụng để quản lý các hàm thực thi của tác vụ theo cơ chế polling-driven, 
-		 * 								nơi mỗi tác vụ sẽ được kích hoạt và thực thi liên tục hoặc theo một lịch trình nhất định, 
-		 * 								không phụ thuộc vào việc nhận tin nhắn.
+		 * @attention `pf_task_polling` được sử dụng để quản lý các hàm thực thi của tác vụ theo cơ chế polling-driven, 
+		 * 						nơi mỗi tác vụ sẽ được kích hoạt và thực thi liên tục hoặc theo một lịch trình nhất định, 
+		 * 						không phụ thuộc vào việc nhận tin nhắn.
 		 */
 		typedef void (*pf_task_norm)(ciedpc_msg_t*);
 		typedef void (*pf_task_polling)(); 
@@ -105,12 +104,16 @@
 		 * @brief Định nghĩa cấu trúc để quản lý thông tin của tác vụ message-driven
 		 * @param id: ID của tác vụ message-driven
 		 * @param pri: Mức độ ưu tiên của tác vụ message-driven
-		 * @param task_norm: Hàm thực thi của tác vụ message-driven
+		 * @param fsm: Cấu trúc FSM để quản lý trạng thái của tác vụ message-driven
+		 * @param tsm: Cấu trúc TSM để quản lý thời gian và sự kiện của tác vụ message-driven
+		 * @param task_norm: Hàm thực thi của tác vụ message-driven, được gọi khi tác vụ nhận được tin nhắn để xử lý
 		 * @param msg_queue: Hàng đợi tin nhắn của tác vụ message-driven
 		 */
 		typedef struct task_norm_t {
 			task_id_t id;
 			task_pri_t pri;
+			ciedpc_fsm_t fsm;
+			ciedpc_tsm_t tsm;
 			pf_task_norm task_norm;
 			fifo_t msg_queue; 
 		} task_norm_t;

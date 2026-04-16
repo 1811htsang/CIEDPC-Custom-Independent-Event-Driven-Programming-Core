@@ -57,6 +57,15 @@
 		void		fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t element_size); 
 
 		/**
+		 * @brief Kiểm tra xem FIFO đã được khởi tạo hay chưa
+		 * 
+		 * @param fifo Con trỏ đến cấu trúc FIFO cần kiểm tra
+		 * @return true Nếu FIFO đã được khởi tạo
+		 * @return false Nếu FIFO chưa được khởi tạo
+		 */
+		bool 		fifo_isinit(fifo_t* fifo);
+
+		/**
 		 * @brief Lấy số lượng phần tử có thể chứa trong FIFO
 		 * @param fifo Con trỏ đến cấu trúc FIFO cần kiểm tra
 		 * @return uint32_t Số lượng phần tử có thể chứa trong FIFO
