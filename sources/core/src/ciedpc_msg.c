@@ -57,8 +57,6 @@
 	#define CIEDPC_MSG_ISR_QUEUE_SIZE   (16u) 	// units
 #endif
 
-
-
 /**
  * @brief Khai báo cấu trúc quản lý Pool tin nhắn
  */

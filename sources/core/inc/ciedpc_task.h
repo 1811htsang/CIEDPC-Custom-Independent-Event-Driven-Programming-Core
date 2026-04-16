@@ -37,7 +37,8 @@
     #define CIEDPC_TASK_SYS_ID				(0xDF2) // Tác vụ hệ thống (info + memrp)
     #define CIEDPC_TASK_DBG_ID				(0xDF3) // Tác vụ debug
     #define CIEDPC_TASK_USR_ID				(0xDF4) // Tác vụ người dùng
-    #define CIEDPC_TASK_IDLE_ID				(0xDFF) // Tác vụ trống
+    #define CIEDPC_TASK_IDLE_ID				(0xDFE) // Tác vụ trống
+		#define CIEDPC_TASK_EOT_ID				(0xDFF) // Kết thúc danh sách tác vụ
 
 		/**
      * @brief Định nghĩa các hằng số cho mức độ ưu tiên của tác vụ trong hệ thống CIEDPC
@@ -86,8 +87,8 @@
 		 * @brief Định nghĩa các kiểu dữ liệu để quản lý ID 
 		 * 				và mức độ ưu tiên của tác vụ trong hệ thống CIEDPC
 		 */
-		typedef ui8	task_pri_t; // Mức ưu tiên của tác vụ
-		typedef ui8	task_id_t; 	// ID của tác vụ
+		typedef ui16	task_pri_t; // Mức ưu tiên của tác vụ
+		typedef ui8		task_id_t; 	// ID của tác vụ
 
 		/**
 		 * @brief Định nghĩa các kiểu dữ liệu để quản lý hàm thực thi của tác vụ
@@ -125,14 +126,6 @@
 			ui8 ability;									// Khả năng của tác vụ polling
 			pf_task_polling task_polling;	// Hàm thực thi của tác vụ polling
 		} task_polling_t;
-
-		/**
-		 * @brief Hàm khởi tạo hệ thống quản lý tác vụ trong CIEDPC
-		 * @attention `ciedpc_task_init` được thiết kế để khởi tạo hệ thống quản lý tác vụ trong CIEDPC,
-		 *            bao gồm việc thiết lập các cấu trúc dữ liệu cần thiết, cấu hình các hàng đợi và chuẩn bị môi trường 
-		 * 						để quản lý và điều phối các tác vụ trong hệ thống CIEDPC một cách hiệu quả và ổn định.
-		 */
-		RETR_STAT ciedpc_task_init();
 
 		/**
 		 * @brief Hàm tạo tác vụ message-driven trong hệ thống CIEDPC
