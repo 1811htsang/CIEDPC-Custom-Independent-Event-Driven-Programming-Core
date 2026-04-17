@@ -9,6 +9,7 @@
  * 
  */
 #include "ciedpc_fsm.h"
+#include "ciedpc_msg.h"
 
 void ciedpc_fsm_go_next(ciedpc_fsm_t* me, state_handler target) {
   // Bảo vệ critical section để đảm bảo tính nhất quán khi thay đổi trạng thái của FSM

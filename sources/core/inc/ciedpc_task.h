@@ -23,6 +23,7 @@
 		#include <stdbool.h>
 		#include "ciedpc_core.h" 
 		#include "ciedpc_fsm.h"
+		#include "ciedpc_tsm.h"
 		#include "fifo.h" 
 
 		/**
@@ -40,6 +41,8 @@
     #define CIEDPC_TASK_USR_ID				(0xDF4) // Tác vụ người dùng
     #define CIEDPC_TASK_IDLE_ID				(0xDFE) // Tác vụ trống
 		#define CIEDPC_TASK_EOT_ID				(0xDFF) // Kết thúc danh sách tác vụ
+		#define CIEDPC_TASK_MIN_ID 				(0xDF0) // ID đầu tiên
+		#define CIEDPC_TASK_MAX_ID				(0xDFF) // ID cuối cùng
 
 		/**
      * @brief Định nghĩa các hằng số cho mức độ ưu tiên của tác vụ trong hệ thống CIEDPC
@@ -89,7 +92,7 @@
 		 * 				và mức độ ưu tiên của tác vụ trong hệ thống CIEDPC
 		 */
 		typedef ui16	task_pri_t; // Mức ưu tiên của tác vụ
-		typedef ui8		task_id_t; 	// ID của tác vụ
+		typedef ui16	task_id_t; 	// ID của tác vụ
 
 		/**
 		 * @brief Định nghĩa các kiểu dữ liệu để quản lý hàm thực thi của tác vụ
