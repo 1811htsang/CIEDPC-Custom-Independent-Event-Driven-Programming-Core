@@ -4,6 +4,9 @@
 
 ## Công việc cần làm
 
-- [ ] Hoàn thiện phân tích lõi tham chiếu AKEDP hiện có để đưa ra tài liệu phân tích & đề xuất cải tiến.
-- [ ] Xây dựng tài liệu thiết kế chi tiết cho lõi tham chiếu AKEDP, bao gồm kiến trúc hệ thống, các module chính và cách chúng tương tác với nhau.
-- [ ] Bổ sung các tài liệu nghiên cứu về mô hình EDP.
+- [x] Hoàn thiện phân tích lõi tham chiếu AKEDP hiện có để đưa ra tài liệu phân tích & đề xuất cải tiến.
+- [x] Remove các obsolete code và thay thế bằng cấu trúc thư mục + cấu trúc code mới.
+- [x] Hoàn thiện thông tin core gốc
+- [x] Hoàn thiện message pool implementation và tích hợp vào lõi CIEDPC.
+- [x] Hoàn thiện FSM, TSM làm cơ sở để implement vào task driver.
+- [ ] Hoàn thiện task driver implementation và tích hợp vào lõi CIEDPC.
