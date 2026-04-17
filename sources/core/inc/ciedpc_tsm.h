@@ -1,4 +1,14 @@
-﻿#ifndef __TSM_H__
+﻿/**
+ * @file ciedpc_tsm.h
+ * @author Shang Huang
+ * @brief Header file for Transition State Machine (TSM) management in CIEDPC system
+ * @version 0.1
+ * @date 2026-04-17
+ * 
+ * @copyright MIT License
+ * 
+ */
+#ifndef __TSM_H__
 	#define __TSM_H__
 
 	#ifdef __cplusplus
@@ -6,47 +16,120 @@
 	{
 	#endif
 
-		// Khai báo các thư viện sử dụng
+		/**
+		 * @brief Khai báo các thư viện sử dụng
+		 */
 		#include <stdint.h>
-		#include "ak.h"
-		#include "message.h"
+		#include "ciedpc_core.h"
+		#include "ciedpc_msg.h"
 
-		// Khai báo các hằng số và macro để quản lý trạng thái null, hàm null, bảng null và tín hiệu null trong máy trạng thái chuyển tiếp (TSM)
-		#define TSM_NULL_MSG				((uint8_t)0) 				// Null message
-		#define TSM_NULL_STATE			((tsm_state_t)0xFF) // Null state
-		#define TSM_NULL_ROUTINE		((tsm_func_f)0) 		// Null routine
-		#define TSM_NULL_ON_STATE		((tsm_on_state_f)0) // Null on-state function
-		#define TSM_NULL_TABLE			((tsm_tbl_t*)0) 		// Null table
+		/**
+		 * @brief Khai báo dải tín hiệu TSM
+		 * @attention Các tín hiệu này được thiết kế tuân thủ theo encoding `0xCx`,
+		 * 						trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
+		 * 						cho phép hệ thống CIEDPC quản lý tối đa 16 tín hiệu
+		 */
+		#define CIEDPC_TSM_SIG_ENTRY    (0xC0u)
+		#define CIEDPC_TSM_SIG_EXIT     (0xC1u)
+		#define CIEDPC_TSM_SIG_INIT     (0xC2u)
 
-		// Khai báo cấu trúc để tránh cyclic include
-		typedef uint8_t tsm_state_t;
+		/**
+		 * @brief Khai báo dải trạng thái TSM
+		 * @attention Các tín hiệu này được thiết kế tuân thủ theo encoding `0xCFx`,
+		 * 						trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
+		 * 						cho phép hệ thống CIEDPC quản lý tối đa 16 tín hiệu
+		 */
+		#define CIEDPC_TSM_STATE_BACK   (0xCF0u) // Quay lại trạng thái cũ
+		#define CIEDPC_TSM_STATE_STAY   (0xCF1u) // Giữ nguyên trạng thái hiện tại
+		#define CIEDPC_TSM_STATE_RESET  (0xCF2u) // Đặt lại về trạng thái ban đầu
+		#define CIEDPC_TSM_STATE_MIN		(0xCF0u) // ID thấp nhất
+		#define CIEDPC_TSM_STATE_MAX 		(0xCFFu) // ID cao nhất
 
-		// Khai báo con trỏ hàm để quản lý các hàm xử lý trạng thái và hàm callback khi trạng thái thay đổi trong máy trạng thái chuyển tiếp (TSM)
-		typedef void (*tsm_func_f)(ak_msg_t*); // Hàm xử lý trạng thái
-		typedef void (*tsm_on_state_f)(tsm_state_t); // Hàm callback khi trạng thái thay đổi
+		/**
+		 * @brief Định nghĩa kiểu dữ liệu để quản lý trạng thái trong máy trạng thái chuyển tiếp (TSM)
+		 */
+		typedef ui16 tsm_state_id_t;
 
-		// Khai báo cấu trúc quản lý thông tin của máy trạng thái chuyển tiếp (TSM)
-		typedef struct {
-			uint8_t sig;							// Tín hiệu
-			tsm_state_t next_state;		// Trạng thái tiếp theo sau khi xử lý tín hiệu
-			tsm_func_f tsm_func;			// Hàm xử lý trạng thái
-		} tsm_t;
+		/**
+		 * @brief Khai báo con trỏ hàm để quản lý handler và callback
+		 */
+		typedef void (*tsm_func_f)(ciedpc_msg_t*); // Hàm xử lý trạng thái
+		typedef void (*tsm_on_state_f)(tsm_state_id_t); // Hàm callback khi trạng thái thay đổi
 
-		// Khai báo cấu trúc quản lý thông tin của bảng máy trạng thái chuyển tiếp (TSM)
-		typedef struct tsm_tbl_t {
-			tsm_state_t state;				// Trạng thái hiện tại của TSM
-			tsm_on_state_f on_state;	// Hàm callback sẽ được gọi khi trạng thái thay đổi
-			tsm_t** table;				    // Bảng chứa các mảng con trỏ đến các cấu trúc tsm_t, mỗi mảng con tương ứng với một trạng thái cụ thể của TSM, giúp quản lý các tín hiệu và hàm xử lý trạng thái cho từng trạng thái của TSM
-		} tsm_tbl_t;
+		/**
+		 * @brief Cấu trúc cơ bản định nghĩa một transition trong TSM
+		 * @param sig: Tín hiệu của transition
+		 * @param next_state: Trạng thái tiếp theo sau khi xử lý tín hiệu
+		 * @param tsm_func: Hàm xử lý khi transition kích hoạt
+		 */
+		typedef struct tsm_trans_t {
+			ui8 sig;							
+			tsm_state_id_t next_state;		
+			tsm_func_f tsm_func;			
+		} tsm_trans_t;
 
-		// Khai báo macro để khởi tạo và chuyển trạng thái trong máy trạng thái chuyển tiếp (TSM)
-		#define TSM(t, tbl, s) tsm_init(t, tbl, s)	// Macro để khởi tạo TSM với bảng trạng thái và trạng thái ban đầu
-		#define TSM_TRAN(t, s) tsm_tran(t, s)				// Macro để chuyển trạng thái của TSM sang trạng thái mới
+		/**
+		 * @brief Cấu trúc mô tả thông tin của một state trong TSM
+		 * @param state_id: ID của trạng thái, nên tuân thủ tương ứng index theo thứ tự khi khởi tạo state table
+		 * @param on_entry: Hàm được gọi khi vào trạng thái
+		 * @param on_exit: Hàm được gọi khi thoát trạng thái
+		 * @param transitions: Mảng các transition được xử lý trong trạng thái này
+		 * @param tran_count: Số lượng transition trong mảng transitions
+		 */
+		typedef struct tsm_state_desc_t {
+			tsm_state_id_t 			state_id;     
+			tsm_func_f  				on_entry;     
+			tsm_func_f  				on_exit;      
+			const tsm_trans_t* 	transitions; 
+			ui8      						trans_count;  
+		} tsm_state_desc_t;
 
-		// Khai báo các hàm để quản lý máy trạng thái chuyển tiếp (TSM), bao gồm khởi tạo TSM, chuyển trạng thái và xử lý tin nhắn trong TSM
-		void tsm_init(tsm_tbl_t* tsm_tbl, tsm_t** tbl, tsm_state_t state); // Hàm khởi tạo TSM với bảng trạng thái và trạng thái ban đầu
-		void tsm_tran(tsm_tbl_t* tsm_tbl, tsm_state_t state);							 // Hàm chuyển trạng thái của TSM sang trạng thái mới
-		void tsm_dispatch(tsm_tbl_t* tsm_tbl, ak_msg_t* msg); 						// Hàm xử lý tin nhắn trong TSM, giúp xác định tín hiệu của tin nhắn và thực thi hàm xử lý trạng thái tương ứng, cũng như chuyển trạng thái nếu cần thiết
+		/**
+		 * @brief Cấu trúc quản lý thông tin của máy trạng thái chuyển tiếp (TSM)
+		 * @param cur_state: Trạng thái hiện tại của TSM, sử dụng state_id từ tsm_state_desc_t
+		 * @param prev_state: Trạng thái trước đó của TSM, sử dụng state_id từ tsm_state_desc_t
+		 * @param state_table: Bảng chứa các mô tả trạng thái, mỗi phần tử trong bảng là một tsm_state_desc_t
+		 * @param state_count: Số lượng trạng thái trong bảng state_table
+		 * @param on_state_changed: Hàm callback sẽ được gọi khi trạng thái thay đổi, nhận vào ID của trạng thái mới
+		 */
+		typedef struct tsm_trans_tbl_t {
+			tsm_state_id_t  cur_state;    
+			tsm_state_id_t  prev_state;   
+			const tsm_state_desc_t* state_table;
+			ui8      state_count;
+			tsm_on_state_f on_state_changed;
+		} ciedpc_tsm_t;
+
+		/**
+		 * @brief Hàm khởi tạo TSM
+		 * @param tsm_table Bảng chứa thông tin về các trạng thái và transition của TSM
+		 * @param state_des_table Bảng chứa mô tả chi tiết về các trạng thái của TSM, mỗi phần tử là một tsm_state_desc_t
+		 * @param state_count Số lượng trạng thái trong bảng state_des_table
+		 * @param initial_state_id ID của trạng thái ban đầu của TSM
+		 * @param on_state_changed Hàm callback sẽ được gọi khi trạng thái thay đổi, nhận vào ID của trạng thái mới
+		 * @attention Khi khởi tạo trạng thái ban đầu thì initial_state_id được set là 1 state tự trỏ vào chính nó
+		 */
+		void ciedpc_tsm_init(
+			ciedpc_tsm_t* tsm_table, const tsm_state_desc_t* state_des_table, 
+			ui8 state_count, tsm_state_id_t initial_state_id, 
+			tsm_on_state_f on_state_changed
+		);
+
+		/**
+		 * @brief Hàm để thực hiện chuyển đổi trạng thái trong TSM dựa trên tín hiệu nhận được
+		 * 
+		 * @param tsm_table Bảng chứa thông tin về các trạng thái và transition của TSM
+		 * @param state_id ID của trạng thái mục tiêu mà TSM sẽ chuyển đến
+		 */
+		void ciedpc_tsm_trans(ciedpc_tsm_t* tsm_table, tsm_state_id_t state_id);
+
+		/**
+		 * @brief Hàm để xử lý tín hiệu và điều hướng trạng thái trong TSM
+		 * 
+		 * @param tsm_table Bảng chứa thông tin về các trạng thái và transition của TSM
+		 * @param msg Con trỏ đến tin nhắn chứa tín hiệu cần xử lý để điều hướng trạng thái trong TSM
+		 */
+		void ciedpc_tsm_dispatch(ciedpc_tsm_t* tsm_table, ciedpc_msg_t* msg); 
 
 	#ifdef __cplusplus
 	}
