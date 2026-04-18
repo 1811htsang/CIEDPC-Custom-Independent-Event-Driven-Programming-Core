@@ -122,6 +122,16 @@
 		 */
 		void ciedpc_msg_set_data(ciedpc_msg_t* msg, const ui8* data, ui16 size);
 
+		/**
+		 * @brief Hàm nội bộ để khởi tạo Pool tin nhắn
+		 * 
+		 * @param tid ID của tác vụ đích nhận tin nhắn từ ISR
+		 * @param sig Tín hiệu nhận vào
+		 * @return RETR_STAT Trạng thái của việc enqueue tín hiệu vào hàng đợi ISR
+		 * @attention Hàm này được thiết kế tách biệt dành cho việc xử lý với ISR 
+		 */
+		RETR_STAT internal_ciedpc_msg_enqueue_isr_sig(task_id_t tid, ui8 sig);
+
 	#ifdef __cplusplus
 	}
 	#endif

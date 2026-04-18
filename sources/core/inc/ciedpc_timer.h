@@ -1,68 +1,98 @@
-﻿#ifndef __TIMER_H__
-	#define __TIMER_H__
+﻿/**
+ * @file ciedpc_timer.h
+ * @author Shang Huang
+ * @brief Timer management definitions and utilities for CIEDPC system
+ * @version 0.1
+ * @date 2026-04-18
+ * 
+ * @copyright MIT License
+ * 
+ */
+#ifndef __CIEDPC_TIMER_H__
+	#define __CIEDPC_TIMER_H__
 
-	// Khai báo C directive cho C++
 	#ifdef __cplusplus
 	extern "C"
 	{
 	#endif
 
-		// Khai báo các thư viện sử dụng
+		/**
+		 * @brief Khai báo các thư viện sử dụng
+		 */
 		#include <stdint.h>
-		#include "ak.h"
-		#include "timer.h"
-		#include "task.h"
-		#include "message.h"
+		#include "ciedpc_core.h"
+		#include "ciedpc_task.h"
+		#include "ciedpc_msg.h"
 
-		// Khai báo đơn vị thời gian cho timer tick
-		#define TIMER_TICK					(0x01u)
+		/**
+		 * @brief Khai báo đơn vị thời gian cho timer tick
+		 */
+		#define CIEDPC_TIMER_TICK					(0x01u)
 
-		// Khai báo các hằng số và macro để quản lý con trỏ timer và trạng thái trả về của các hàm liên quan đến timer
-		#define TIMER_MSG_NULL				((ak_timer_t*)0)
-		#define TIMER_RET_OK				(1u)
-		#define TIMER_RET_NG				(0u)
-
-		// Khai báo directive để quản lý kích thước của pool timer
-		#ifndef AK_TIMER_POOL_SIZE
-			#define AK_TIMER_POOL_SIZE			(16u)
-		#endif
-
-		// Khai báo cấu trúc timer để tránh cyclic include và làm rõ ràng hơn về cấu trúc của timer message
-		typedef uint8_t						timer_sig_t;
-
-		// Khai báo cấu trúc quản lý loại của timer
+		/**
+		 * @brief Định nghĩa loại Timer
+		 * @param CIEDPC_TIMER_ONE_SHOT: Timer chạy một lần rồi tự xóa
+		 * @param CIEDPC_TIMER_PERIODIC: Timer tự động nạp lại sau khi hết hạn
+		 */
 		typedef enum {
-			TIMER_ONE_SHOT, // Quản lý loại timer một lần, giúp xác định rằng timer sẽ chỉ kích hoạt một lần và sau đó sẽ tự động hủy bỏ
-			TIMER_PERIODIC 	// Quản lý loại timer định kỳ, giúp xác định rằng timer sẽ kích hoạt liên tục theo một khoảng thời gian nhất định cho đến khi được hủy bỏ
-		} timer_type_t;
+			CIEDPC_TIMER_ONE_SHOT = 0,  
+			CIEDPC_TIMER_PERIODIC       
+		} ciedpc_timer_type_t;
 
-		// Khai báo cấu trúc quản lý thông tin của timer
-		typedef struct ak_timer_t {
-			struct ak_timer_t*	next;		// Con trỏ đến timer tiếp theo trong pool
+		/**
+		 * @brief Cấu trúc một nút Timer (Timer Node)
+		 * @param next: Con trỏ đến nút Timer tiếp theo trong danh sách liên kết
+		 * @param des_task_id: ID của tác vụ đích sẽ nhận tin nhắn khi timer hết hạn
+		 * @param sig: Tín hiệu sẽ được gửi đến tác vụ đích khi timer hết hạn
+		 * @param type: Loại timer (One-shot hoặc Periodic)
+		 * @param period: Chu kỳ nạp lại của timer (dùng cho timer định kỳ)
+		 */
+		typedef struct ciedpc_timer_t {
+			/* Quản lý danh sách liên kết */
+			struct ciedpc_timer_t* next;
 
-			task_id_t			des_task_id;	// ID của tác vụ đích nhận tin nhắn khi timer kích hoạt
-			timer_sig_t		sig;				// Tín hiệu được gửi đến tác vụ đích khi timer kích hoạt
+			/* Thông tin điều phối */
+			ui8             des_task_id;    /* Task sẽ nhận tin nhắn khi hết hạn */
+			ui8             sig;            /* Tín hiệu sẽ gửi đi */
+			ciedpc_timer_type_t type;       /* Loại timer */
 
-			uint32_t			counter;		// Bộ đếm của timer
-			uint32_t			period;			// Chu kỳ của timer
-		} ak_timer_t;
+			/* Quản lý thời gian (tính theo nhịp Tick) */
+			ui32            period;         /* Chu kỳ nạp lại (dùng cho Periodic) */
+			ui32            counter;        /* Bộ đếm lùi hiện tại */
 
-		// Khai báo các hàm quản lý timer
-		extern void timer_init(); // Khởi tạo timer
-		extern void timer_tick(uint32_t t); // Cập nhật timer theo tick
-		extern void task_timer_tick(ak_msg_t* msg); // Xử lý tick của timer trong tác vụ
+			/* Trạng thái nội bộ */
+			bool            is_active;
+		} CIEDPC_ATTR_PACKED ciedpc_timer_t;
 
-		// Khai báo các hàm để quản lý việc thiết lập và hủy bỏ timer, cũng như để lấy thông tin về việc sử dụng pool timer
-		extern uint8_t timer_set(task_id_t des_task_id, timer_sig_t sig, uint32_t duty, timer_type_t type); // Thiết lập timer với ID của tác vụ đích, tín hiệu, chu kỳ và loại timer
-		extern uint8_t timer_remove_attr(task_id_t des_task_id, timer_sig_t sig); // Hủy bỏ timer dựa trên ID của tác vụ đích và tín hiệu
+		/**
+		 * @brief Khởi tạo hệ thống Timer (gọi trong ciedpc_init)
+		 */
+		void ciedpc_timer_init(void);
 
-		// Khai báo các hàm để quản lý việc lấy thông tin về việc sử dụng pool timer, giúp theo dõi số lượng timer đang được sử dụng và số lượng timer đã được sử dụng tối đa trong pool timer
-		extern uint32_t get_timer_msg_pool_used(); // Trả về số lượng timer đang được sử dụng trong pool timer, giúp theo dõi việc sử dụng tài nguyên của timer trong hệ thống
-		extern uint32_t get_timer_msg_pool_used_max(); // Trả về số lượng timer đã được sử dụng tối đa trong pool timer, giúp theo dõi mức độ sử dụng tài nguyên của timer trong hệ thống và đánh giá hiệu quả của việc quản lý timer
+		/**
+		 * @brief Thiết lập một timer mới
+		 * @param tid Task đích nhận tin nhắn
+		 * @param sig Tín hiệu gửi đi
+		 * @param ms Thời gian (mili giây)
+		 * @param type Loại timer
+		 * @return RETR_STAT STAT_OK nếu tạo thành công
+		 */
+		RETR_STAT ciedpc_timer_set(ui8 tid, ui8 sig, ui32 ms, ciedpc_timer_type_t type);
+
+		/**
+		 * @brief Xóa một timer dựa trên cặp Task ID và Signal
+		 */
+		RETR_STAT ciedpc_timer_remove(ui8 tid, ui8 sig);
+
+		/**
+		 * @brief Hàm xử lý tick của timer
+		 * @attention Hàm này sẽ được gọi trong ngữ cảnh ngắt
+		 */
+		void ciedpc_timer_tick(void);
 
 	#ifdef __cplusplus
 	}
 	#endif
 
-#endif //__TIMER_H__
+#endif //__CIEDPC_TIMER_H__
 

@@ -86,8 +86,8 @@ CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") ciedpc_msg_pool_header_t g_extal_p
 CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") static ciedpc_msg_t extal_pool[CIEDPC_MSG_EXTAL_QUEUE_SIZE];
 CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") static ui8 extal_pool_data[CIEDPC_MSG_EXTAL_QUEUE_SIZE][CIEDPC_MSG_EXTAL_DATA_MAX];
 
-CIEDPC_ATTR_SECTION(".ciedpc_msg_isr_pool") static fifo_t isr_pool;
-CIEDPC_ATTR_SECTION(".ciedpc_msg_isr_pool") static ciedpc_msg_isr_t isr_pool_buffer[CIEDPC_MSG_ISR_QUEUE_SIZE];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_isr_pool") fifo_t isr_pool;
+CIEDPC_ATTR_SECTION(".ciedpc_msg_isr_pool") ciedpc_msg_isr_t isr_pool_buffer[CIEDPC_MSG_ISR_QUEUE_SIZE];
 
 /**
  * @brief Khai báo các hàm quản lý nội bộ
@@ -410,4 +410,20 @@ bool ciedpc_msg_is_valid_ptr(ciedpc_msg_t* msg) {
  */
 void internal_ciedpc_msg_pool_panic(ui8 pool_id) {
 
+}
+
+RETR_STAT internal_ciedpc_msg_enqueue_isr_sig(task_id_t tid, ui8 sig) {
+	ciedpc_msg_isr_t raw_sig;
+	raw_sig.des_task_id = tid;
+	raw_sig.sig = sig;
+
+	/* 
+	* Vì hàm này được gọi từ ISR, fifo_put PHẢI là lock-free 
+	* hoặc chúng ta bọc bảo vệ tối thiểu nếu cần 
+	*/
+	if (fifo_put(&isr_pool, &raw_sig) == RET_FIFO_OK) {
+		return STAT_OK;
+	}
+	
+	return STAT_ERROR; // Hàng đợi ISR đầy
 }
