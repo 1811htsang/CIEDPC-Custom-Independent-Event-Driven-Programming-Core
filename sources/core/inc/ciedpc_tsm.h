@@ -20,30 +20,9 @@
 		 * @brief Khai báo các thư viện sử dụng
 		 */
 		#include <stdint.h>
+		#include "pal_core.h"
 		#include "ciedpc_core.h"
 		#include "ciedpc_msg.h"
-
-		/**
-		 * @brief Khai báo dải tín hiệu TSM
-		 * @attention Các tín hiệu này được thiết kế tuân thủ theo encoding `0xCx`,
-		 * 						trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
-		 * 						cho phép hệ thống CIEDPC quản lý tối đa 16 tín hiệu
-		 */
-		#define CIEDPC_TSM_SIG_ENTRY    (0xC0u)
-		#define CIEDPC_TSM_SIG_EXIT     (0xC1u)
-		#define CIEDPC_TSM_SIG_INIT     (0xC2u)
-
-		/**
-		 * @brief Khai báo dải trạng thái TSM
-		 * @attention Các tín hiệu này được thiết kế tuân thủ theo encoding `0xCFx`,
-		 * 						trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
-		 * 						cho phép hệ thống CIEDPC quản lý tối đa 16 tín hiệu
-		 */
-		#define CIEDPC_TSM_STATE_BACK   (0xCF0u) // Quay lại trạng thái cũ
-		#define CIEDPC_TSM_STATE_STAY   (0xCF1u) // Giữ nguyên trạng thái hiện tại
-		#define CIEDPC_TSM_STATE_RESET  (0xCF2u) // Đặt lại về trạng thái ban đầu
-		#define CIEDPC_TSM_STATE_MIN		(0xCF0u) // ID thấp nhất
-		#define CIEDPC_TSM_STATE_MAX 		(0xCFFu) // ID cao nhất
 
 		/**
 		 * @brief Định nghĩa kiểu dữ liệu để quản lý trạng thái trong máy trạng thái chuyển tiếp (TSM)

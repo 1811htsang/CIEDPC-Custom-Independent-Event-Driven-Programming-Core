@@ -20,7 +20,7 @@
 		 * @brief Khai báo thư viện sử dụng
 		 */
 		#include <stdint.h>
-		#include "ciedpc_core.h"
+		#include "pal_core.h"
 
 		/**
 		 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống CIEDPC
@@ -28,17 +28,6 @@
 		 * 						cho phép sử dụng con trỏ đến `ciedpc_msg_t` trong các khai báo sau này
 		 */
 		typedef struct ciedpc_msg_t ciedpc_msg_t;
-
-		/**
-		 * @brief Các tín hiệu đặc biệt dành cho quản lý vòng đời trạng thái
-		 * @attention Các tín hiệu này được thiết kế tuân thủ theo encoding `0xCx`,
-		 *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
-		 *            cho phép hệ thống CIEDPC quản lý tối đa 16 tín hiệu đặc biệt 
-		 * 						khác nhau để điều khiển vòng đời của trạng thái trong FSM,
-		 */
-		#define CIEDPC_FSM_SIG_ENTRY    (0xC0u)
-		#define CIEDPC_FSM_SIG_EXIT     (0xC1u)
-		#define CIEDPC_FSM_SIG_INIT     (0xC2u)
 
 		/**
 		 * @brief Số lượng trạng thái tối đa trong lịch sử của FSM

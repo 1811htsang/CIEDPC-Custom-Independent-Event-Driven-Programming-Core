@@ -21,62 +21,11 @@
      */
 		#include <stdint.h>
 		#include <stdbool.h>
-		#include "ciedpc_core.h" 
+		#include "pal_core.h" 
+		#include "ciedpc_core.h"
 		#include "ciedpc_fsm.h"
 		#include "ciedpc_tsm.h"
 		#include "fifo.h" 
-
-		/**
-     * @brief Định nghĩa các hằng số cho ID của tác vụ bình thường
-     * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xDFx`, 
-     *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
-     *            cho phép hệ thống CIEDPC quản lý tối đa 16 tác vụ khác nhau, 
-     *            bao gồm các tác vụ timer, giao tiếp, hệ thống, debug, người dùng và trống.
-     */
-		#define CIEDPC_TASK_NORM_MAX_SIZE						(16u) 	// 16 tác vụ, từ 0 đến 15
-    #define CIEDPC_TASK_NORM_TIM_ID							(0xDF0) // Tác vụ timer
-    #define CIEDPC_TASK_NORM_IF_ID		    			(0xDF1) // Tác vụ giao tiếp
-    #define CIEDPC_TASK_NORM_SYS_ID							(0xDF2) // Tác vụ hệ thống (info + memrp)
-    #define CIEDPC_TASK_NORM_DBG_ID							(0xDF3) // Tác vụ debug
-    #define CIEDPC_TASK_NORM_USR_ID							(0xDF4) // Tác vụ người dùng
-    #define CIEDPC_TASK_NORM_IDLE_ID						(0xDFE) // Tác vụ trống
-		#define CIEDPC_TASK_NORM_EOT_ID							(0xDFF) // Kết thúc danh sách tác vụ
-		#define CIEDPC_TASK_NORM_MIN_ID 						(0xDF0) // ID đầu tiên
-		#define CIEDPC_TASK_NORM_MAX_ID							(0xDFF) // ID cuối cùng
-
-		#define CIEDPC_TASK_POLLING_MAX_SIZE					(8u) 	// 8 tác vụ, từ 0 đến 7
-		#define CIEDPC_TASK_POLL_WATCHDOG_ID        (0xDE0) // Tác vụ "đá" Watchdog để reset chip nếu treo
-		#define CIEDPC_TASK_POLL_SYS_LIFE_ID        (0xDE1) // Tác vụ nháy LED Heartbeat (Nhịp tim hệ thống)
-		#define CIEDPC_TASK_POLL_MEM_MONITOR_ID     (0xDE2) // Tác vụ giám sát rò rỉ RAM hoặc tràn Stack
-		#define CIEDPC_TASK_POLL_IDLE_ID            (0xDE3) // Tác vụ nhàn rỗi 
-		#define CIEDPC_TASK_POLLING_EOT_ID         	(0xDEF) // Kết thúc danh sách tác vụ polling
-		#define CIEDPC_TASK_POLLING_MIN_ID         	(0xDE0) // ID đầu tiên
-		#define CIEDPC_TASK_POLLING_MAX_ID         	(0xDEF) // ID cuối cùng
-
-		/**
-     * @brief Định nghĩa các hằng số cho mức độ ưu tiên của tác vụ trong hệ thống CIEDPC
-     * @attention Mức độ ưu tiên của tác vụ được thiết kế tuân thủ theo encoding `0xDx`,
-     *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
-     *            cho phép hệ thống CIEDPC quản lý tối đa 16 mức độ ưu tiên khác nhau, 
-     *            từ mức 0 (ưu tiên thấp nhất) đến mức 15 (ưu tiên cao nhất).
-     */
-    #define CIEDPC_TASK_PRI_MAX_SIZE				(16u)   // 16 mức ưu tiên, từ 0 đến 15
-    #define CIEDPC_TASK_PRI_LEVEL_0				(0xD0u) // Ưu tiên thấp nhất
-    #define CIEDPC_TASK_PRI_LEVEL_1				(0xD1u)
-    #define CIEDPC_TASK_PRI_LEVEL_2				(0xD2u)
-    #define CIEDPC_TASK_PRI_LEVEL_3				(0xD3u)
-    #define CIEDPC_TASK_PRI_LEVEL_4				(0xD4u)
-    #define CIEDPC_TASK_PRI_LEVEL_5				(0xD5u)
-    #define CIEDPC_TASK_PRI_LEVEL_6				(0xD6u)
-    #define CIEDPC_TASK_PRI_LEVEL_7				(0xD7u)
-    #define CIEDPC_TASK_PRI_LEVEL_8				(0xD8u)
-    #define CIEDPC_TASK_PRI_LEVEL_9				(0xD9u)
-    #define CIEDPC_TASK_PRI_LEVEL_10			(0xDAu)
-    #define CIEDPC_TASK_PRI_LEVEL_11			(0xDBu)
-    #define CIEDPC_TASK_PRI_LEVEL_12			(0xDCu)
-    #define CIEDPC_TASK_PRI_LEVEL_13			(0xDDu)
-    #define CIEDPC_TASK_PRI_LEVEL_14			(0xDEu)
-    #define CIEDPC_TASK_PRI_LEVEL_15			(0xDFu) // Ưu tiên cao nhất
 
 		/**
 		 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống CIEDPC

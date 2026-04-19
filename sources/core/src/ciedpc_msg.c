@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "pal_core.h"
 #include "ciedpc_core.h"
 #include "ciedpc_msg.h"
 #include "ciedpc_task.h"

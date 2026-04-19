@@ -21,7 +21,9 @@
 		 */
 		#include <stdint.h>
 		#include <stdlib.h>
+		#include "pal_core.h"
 		#include "ciedpc_core.h"
+		#include "ciedpc_task.h"
 
 		/**
 		 * @brief Định nghĩa các loại Pool tin nhắn (Nội bộ Core sử dụng)

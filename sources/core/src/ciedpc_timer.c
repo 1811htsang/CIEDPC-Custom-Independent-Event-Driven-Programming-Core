@@ -10,7 +10,7 @@
  */
 #include <string.h>
 #include <stdint.h>
-#include "ciedpc_core.h"
+#include "pal_core.h"
 #include "ciedpc_timer.h"
 #include "ciedpc_task.h"
 #include "ciedpc_msg.h"
