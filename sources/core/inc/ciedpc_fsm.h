@@ -20,7 +20,7 @@
 		 * @brief Khai báo thư viện sử dụng
 		 */
 		#include <stdint.h>
-		#include "pal_core.h"
+		#include "ciedpc_core.h"
 
 		/**
 		 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống CIEDPC

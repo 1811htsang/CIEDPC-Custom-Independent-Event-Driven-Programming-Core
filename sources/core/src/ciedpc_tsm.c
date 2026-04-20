@@ -9,6 +9,7 @@
  * 
  */
 #include "ciedpc_tsm.h"
+#include "ciedpc_msg.h"
 
 void ciedpc_tsm_init(
 	ciedpc_tsm_t* tsm_table, const tsm_state_desc_t* state_des_table, 
@@ -42,7 +43,7 @@ void ciedpc_tsm_trans(ciedpc_tsm_t* tsm_table, tsm_state_id_t state_id) {
 	tsm_state_id_t next_state = state_id;
 
 	// Bảo vệ critical section
-	pal_entry_critical();
+	pal_enter_critical();
 
 	if (tsm_table && (state_id >= CIEDPC_TSM_STATE_MIN && state_id <= CIEDPC_TSM_STATE_MAX)) {
 

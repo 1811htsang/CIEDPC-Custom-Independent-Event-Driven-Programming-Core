@@ -21,7 +21,6 @@
      */
 		#include <stdint.h>
 		#include <stdbool.h>
-		#include "pal_core.h" 
 		#include "ciedpc_core.h"
 		#include "ciedpc_fsm.h"
 		#include "ciedpc_tsm.h"

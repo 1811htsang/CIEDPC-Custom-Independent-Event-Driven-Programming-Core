@@ -10,10 +10,11 @@
      * @brief Khai báo thư viện sử dụng
      */
     #include <stdint.h>
-    #include "pal_core.h"
-    #include "ciedpc_fsm.h"
-    #include "ciedpc_tsm.h"
+    #include <stdbool.h>
+    #include "ciedpc_core.h"
     #include "ciedpc_task.h"
+    #include "ciedpc_tsm.h"
+    #include "ciedpc_fsm.h"
     #include "ciedpc_msg.h"
     #include "ciedpc_timer.h"
 

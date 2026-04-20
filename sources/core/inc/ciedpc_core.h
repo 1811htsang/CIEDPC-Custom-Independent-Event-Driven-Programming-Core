@@ -21,10 +21,6 @@
      */
     #include <string.h>
     #include "pal_core.h"
-    #include "ciedpc_fsm.h"
-    #include "ciedpc_tsm.h"
-    #include "ciedpc_msg.h"
-    #include "ciedpc_task.h"
 
     /**
      * @brief Định nghĩa phiên bản của hệ thống CIEDPC

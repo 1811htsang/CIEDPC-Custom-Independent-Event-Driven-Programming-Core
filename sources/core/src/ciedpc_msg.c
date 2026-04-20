@@ -9,14 +9,10 @@
  * 
  */
 #include <string.h>
-#include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdbool.h>
-#include "pal_core.h"
 #include "ciedpc_core.h"
 #include "ciedpc_msg.h"
-#include "ciedpc_task.h"
 #include "fifo.h"
 
 /**
@@ -103,7 +99,6 @@ sta void internal_ciedpc_msg_pool_init(
 sta ciedpc_msg_t* internal_ciedpc_msg_pool_pop(ciedpc_msg_pool_header_t* header);
 sta void internal_ciedpc_msg_pool_push(ciedpc_msg_pool_header_t* header, ciedpc_msg_t* msg);
 sta ciedpc_msg_pool_header_t* internal_ciedpc_msg_find_best_pool(ui16 size);
-sta void ciedpc_msg_drain_isr_pool(void);
 sta bool ciedpc_msg_is_valid_ptr(ciedpc_msg_t* msg);
 sta void internal_ciedpc_msg_pool_panic(ui8 pool_id);
 
@@ -115,17 +110,17 @@ void ciedpc_msg_pool_init() {
 	);
 	// Khởi tạo NORM Pool
 	internal_ciedpc_msg_pool_init(
-		&g_norm_pool_ctrl, norm_pool, norm_pool_data, CIEDPC_MSG_TYPE_NORM,
+		&g_norm_pool_ctrl, norm_pool, (ui8*)norm_pool_data, CIEDPC_MSG_TYPE_NORM,
 		CIEDPC_MSG_NORM_QUEUE_SIZE, CIEDPC_MSG_NORM_DATA_MAX, 0
 	);
 	// Khởi tạo ALLOC Pool
 	internal_ciedpc_msg_pool_init(
-		&g_alloc_pool_ctrl, alloc_pool, alloc_pool_data, CIEDPC_MSG_TYPE_ALLOC,
+		&g_alloc_pool_ctrl, alloc_pool, (ui8*)alloc_pool_data, CIEDPC_MSG_TYPE_ALLOC,
 		CIEDPC_MSG_ALLOC_QUEUE_SIZE, CIEDPC_MSG_ALLOC_DATA_MAX, 0
 	);
 	// Khởi tạo EXTAL Pool
 	internal_ciedpc_msg_pool_init(
-		&g_extal_pool_ctrl, extal_pool, extal_pool_data, CIEDPC_MSG_TYPE_EXTAL,
+		&g_extal_pool_ctrl, extal_pool, (ui8*)extal_pool_data, CIEDPC_MSG_TYPE_EXTAL,
 		CIEDPC_MSG_EXTAL_QUEUE_SIZE, CIEDPC_MSG_EXTAL_DATA_MAX, 0
 	);
 
@@ -136,7 +131,7 @@ void ciedpc_msg_pool_init() {
 	);
 }
 
-ciedpc_msg_t* ciedpc_msg_alloc(ui8 des_task_id, ui8 sig, ui16 size) {
+ciedpc_msg_t* ciedpc_msg_alloc(ui16 des_task_id, ui8 sig, ui16 size) {
 	ciedpc_msg_t *msg = NULL;
 	ciedpc_msg_pool_header_t* pool_header = internal_ciedpc_msg_find_best_pool(size);
 
@@ -368,12 +363,12 @@ ciedpc_msg_pool_header_t* internal_ciedpc_msg_find_best_pool(ui16 size) {
 void ciedpc_msg_drain_isr_pool(void) {
 	while (!fifo_is_empty(&isr_pool)) {
 		ciedpc_msg_isr_t msg_isr;
-		fifo_pop(&isr_pool, &msg_isr);
+		fifo_get(&isr_pool, &msg_isr);
 		
 		ciedpc_msg_t* msg = ciedpc_msg_alloc(msg_isr.des_task_id, msg_isr.sig, 0);
 
 		if (msg) {
-			ciedpc_task_post(msg);
+			ciedpc_task_post_msg(msg->des_task_id, msg);
 		} else {
 			// Xử lý tình huống cấp phát tin nhắn thất bại, có thể log lỗi hoặc thực hiện hành động khắc phục
 			internal_ciedpc_msg_pool_panic(CIEDPC_MSG_ISR_QUEUE_SIZE); // Sử dụng một mã lỗi đặc biệt cho Pool ISR

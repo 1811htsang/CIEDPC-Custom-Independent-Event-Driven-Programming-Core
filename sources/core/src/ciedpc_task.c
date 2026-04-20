@@ -9,7 +9,7 @@
  * 
  */
 #include <string.h>
-#include "pal_core.h"
+#include "ciedpc_core.h"
 #include "ciedpc_task.h"
 #include "ciedpc_msg.h"
 #include "fifo.h"
@@ -167,7 +167,7 @@ void internal_ciedpc_task_put_to_queue(task_id_t tid, ciedpc_msg_t* msg) {
   }
 
   // Entry critical section
-  pal_entry_critical();
+  pal_enter_critical();
 
   // Đưa tin nhắn vào hàng đợi của tác vụ
   fifo_put(&task->msg_queue, msg);
@@ -210,7 +210,7 @@ void internal_ciedpc_task_set_ready(task_pri_t pri) {
   }
 
   // Bật entry critical section
-  pal_entry_critical();
+  pal_enter_critical();
 
   // Thiết lập trạng thái sẵn sàng cho tác vụ bằng cách đặt bit tương ứng với mức độ ưu tiên
   g_task_norm_ready |= (1 << (pri - CIEDPC_TASK_PRI_LEVEL_0));
@@ -232,7 +232,7 @@ void internal_ciedpc_task_clear_ready(task_pri_t pri) {
   }
 
   // Bật entry critical section
-  pal_entry_critical();
+  pal_enter_critical();
 
   // Xóa trạng thái sẵn sàng cho tác vụ bằng cách xóa bit tương ứng với mức độ ưu tiên
   g_task_norm_ready &= ~(1 << (pri - CIEDPC_TASK_PRI_LEVEL_0));

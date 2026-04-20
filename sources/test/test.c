@@ -2,6 +2,12 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "test.h"
+#include "ciedpc_core.h"
+#include "ciedpc_task.h"
+#include "ciedpc_tsm.h"
+#include "ciedpc_fsm.h"
+#include "ciedpc_msg.h"
+#include "ciedpc_timer.h"
 
 /* --- KHAI BÁO BỘ NHỚ CHO TASK (THEO THIẾT KẾ CỦA BẠN) --- */
 static ciedpc_msg_t* ctrl_q_mem[8];
@@ -55,9 +61,9 @@ void task_controller_handler(ciedpc_msg_t* msg) {
 
 /* --- BẢNG TASK TỔNG --- */
 task_norm_t app_task_table[] = {
-  { TASK_NORM_CONTROLLER_ID, CIEDPC_TASK_PRI_LEVEL_5, task_controller_handler, ctrl_q_mem, 8 },
-  { TASK_NORM_BLINKER_ID,    CIEDPC_TASK_PRI_LEVEL_5, task_blinker_handler,    blink_q_mem, 8 },
-  { CIEDPC_TASK_NORM_EOT_ID, 0, NULL, NULL, 0 }
+  { TASK_NORM_CONTROLLER_ID, CIEDPC_TASK_PRI_LEVEL_5, {0}, {0}, task_controller_handler, {0}, ctrl_q_mem },
+  { TASK_NORM_BLINKER_ID,    CIEDPC_TASK_PRI_LEVEL_5, {0}, {0}, task_blinker_handler,    {0}, blink_q_mem },
+  { CIEDPC_TASK_NORM_EOT_ID, CIEDPC_TASK_PRI_LEVEL_0, {0}, {0}, NULL, {0}, NULL }
 };
 
 /* --- GIẢ LẬP NHỊP TIM HỆ THỐNG TRÊN LINUX --- */

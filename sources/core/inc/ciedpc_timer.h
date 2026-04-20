@@ -20,9 +20,8 @@
 		 * @brief Khai báo các thư viện sử dụng
 		 */
 		#include <stdint.h>
-		#include "pal_core.h"
+		#include "ciedpc_core.h"
 		#include "ciedpc_task.h"
-		#include "ciedpc_msg.h"
 
 		/**
 		 * @brief Khai báo đơn vị thời gian cho timer tick
@@ -77,12 +76,12 @@
 		 * @param type Loại timer
 		 * @return RETR_STAT STAT_OK nếu tạo thành công
 		 */
-		RETR_STAT ciedpc_timer_set(ui8 tid, ui8 sig, ui32 ms, ciedpc_timer_type_t type);
-
+		RETR_STAT ciedpc_timer_set(task_id_t tid, ui8 sig, ui32 ms, ciedpc_timer_type_t type);
+		
 		/**
 		 * @brief Xóa một timer dựa trên cặp Task ID và Signal
 		 */
-		RETR_STAT ciedpc_timer_remove(ui8 tid, ui8 sig);
+		RETR_STAT ciedpc_timer_remove(task_id_t tid, ui8 sig);
 
 		/**
 		 * @brief Hàm xử lý tick của timer

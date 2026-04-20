@@ -21,7 +21,6 @@
 		 */
 		#include <stdint.h>
 		#include <stdlib.h>
-		#include "pal_core.h"
 		#include "ciedpc_core.h"
 		#include "ciedpc_task.h"
 
@@ -87,7 +86,7 @@
 		/**
 		 * @brief Hàm khởi tạo Queue tin nhắn
 		 */
-		void ciedpc_msg_queue_init();
+		void ciedpc_msg_pool_init();
 
 		/**
 		 * @brief Hàm cấp phát tin nhắn duy nhất (UMI)
@@ -96,7 +95,7 @@
 		 * @param size: Kích thước dữ liệu yêu cầu (0 nếu là tin nhắn thuần túy)
 		 * @return ciedpc_msg_t*: Con trỏ tin nhắn hoặc NULL nếu hết bộ nhớ
 		 */
-		ciedpc_msg_t* ciedpc_msg_alloc(ui8 des_task_id, ui8 sig, ui16 size);
+		ciedpc_msg_t* ciedpc_msg_alloc(ui16 des_task_id, ui8 sig, ui16 size);
 
 		/**
 		 * @brief Hàm giải phóng tin nhắn
@@ -133,6 +132,12 @@
 		 * @attention Hàm này được thiết kế tách biệt dành cho việc xử lý với ISR 
 		 */
 		RETR_STAT internal_ciedpc_msg_enqueue_isr_sig(task_id_t tid, ui8 sig);
+
+		/**
+		 * @brief Xả hàng đợi tin nhắn trong ngữ cảnh ISR để giải phóng các tin nhắn đang bị giữ trong hàng đợi ISR
+		 * 
+		 */
+		void ciedpc_msg_drain_isr_pool(void);
 
 	#ifdef __cplusplus
 	}

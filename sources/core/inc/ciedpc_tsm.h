@@ -8,8 +8,8 @@
  * @copyright MIT License
  * 
  */
-#ifndef __TSM_H__
-	#define __TSM_H__
+#ifndef __CIEDPC_TSM_H__
+	#define __CIEDPC_TSM_H__
 
 	#ifdef __cplusplus
 	extern "C"
@@ -20,14 +20,21 @@
 		 * @brief Khai báo các thư viện sử dụng
 		 */
 		#include <stdint.h>
-		#include "pal_core.h"
 		#include "ciedpc_core.h"
-		#include "ciedpc_msg.h"
 
 		/**
 		 * @brief Định nghĩa kiểu dữ liệu để quản lý trạng thái trong máy trạng thái chuyển tiếp (TSM)
 		 */
 		typedef ui16 tsm_state_id_t;
+
+		/**
+		 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống CIEDPC
+		 * @attention `ciedpc_msg_t` được gọi ở đây để thực thi forward declaration, 
+		 * 						cho phép sử dụng con trỏ đến `ciedpc_msg_t` trong các khai báo sau này 
+		 * 						mà không cần phải định nghĩa chi tiết của `ciedpc_msg_t` tại thời điểm này, 
+		 * 						giúp tránh các vấn đề về phụ thuộc lẫn nhau giữa các cấu trúc dữ liệu trong hệ thống CIEDPC.
+		 */
+		typedef struct ciedpc_msg_t ciedpc_msg_t;
 
 		/**
 		 * @brief Khai báo con trỏ hàm để quản lý handler và callback
@@ -114,5 +121,5 @@
 	}
 	#endif
 
-#endif //__TSM_H__
+#endif //__CIEDPC_TSM_H__
 

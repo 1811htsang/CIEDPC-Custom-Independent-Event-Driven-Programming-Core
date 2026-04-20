@@ -56,3 +56,6 @@ dkms.conf
 
 # Obsidian vault
 sketch/.obsidian
+
+# Test build output
+sources/test/build/*

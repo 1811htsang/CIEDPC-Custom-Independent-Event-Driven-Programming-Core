@@ -38,7 +38,7 @@
 		 * @param element_size: Kích thước của mỗi phần tử trong FIFO
 		 * @param buffer: Con trỏ đến vùng nhớ chứa dữ liệu của FIFO
 		 */
-		typedef struct {
+		typedef struct fifo_t {
 			uint32_t tail_index;
 			uint32_t head_index;
 			uint32_t fill_size; 

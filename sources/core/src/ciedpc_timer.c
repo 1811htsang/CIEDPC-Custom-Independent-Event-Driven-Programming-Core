@@ -10,10 +10,9 @@
  */
 #include <string.h>
 #include <stdint.h>
-#include "pal_core.h"
+#include "ciedpc_core.h"
 #include "ciedpc_timer.h"
 #include "ciedpc_task.h"
-#include "ciedpc_msg.h"
 
 /**
  * @brief Khai báo các hằng số cho số lượng timer tối đa có thể chạy cùng lúc
@@ -59,13 +58,13 @@ void ciedpc_timer_init(void) {
 	timer_ctrl.active_count = 0;
 }
 
-RETR_STAT ciedpc_timer_set(ui8 tid, ui8 sig, ui32 ms, ciedpc_timer_type_t type) {
+RETR_STAT ciedpc_timer_set(ui16 tid, ui8 sig, ui32 ms, ciedpc_timer_type_t type) {
 	if (ms == 0 || type > CIEDPC_TIMER_PERIODIC) {
 		return STAT_ERROR; // Tham số không hợp lệ
 	}
 
 	// Entry critical section
-	pal_entry_critical();
+	pal_enter_critical();
 
 	ciedpc_timer_t* existing_timer = internal_ciedpc_timer_find(tid, sig);
 	if (existing_timer) {
@@ -109,9 +108,9 @@ RETR_STAT ciedpc_timer_set(ui8 tid, ui8 sig, ui32 ms, ciedpc_timer_type_t type) 
 	return STAT_OK; // Timer đã được tạo thành công
 }
 
-RETR_STAT ciedpc_timer_remove(ui8 tid, ui8 sig) {
+RETR_STAT ciedpc_timer_remove(ui16 tid, ui8 sig) {
 	// Entry critical section
-	pal_entry_critical();
+	pal_enter_critical();
 
 	ciedpc_timer_t* check = internal_ciedpc_timer_find(tid, sig);
 	if (!check) {

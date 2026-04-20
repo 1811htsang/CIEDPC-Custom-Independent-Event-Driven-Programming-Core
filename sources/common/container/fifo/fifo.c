@@ -42,7 +42,9 @@ uint8_t fifo_put(fifo_t* fifo, void* data) {
 	uint32_t next_tail_index;
 
 	if (fifo->fill_size == fifo->buffer_size) {
-		FATAL("FIFO", 0x02);
+		while (1) {
+
+		}
 	}
 
 	if (data != NULL) {
@@ -64,7 +66,9 @@ uint8_t fifo_get(fifo_t* fifo, void* data) {
 	uint32_t next_head_index;
 
 	if (fifo_is_empty(fifo)) {
-		FATAL("FIFO", 0x03);
+		while (1) {
+			
+		}
 	}
 
 	if (data != NULL) {
