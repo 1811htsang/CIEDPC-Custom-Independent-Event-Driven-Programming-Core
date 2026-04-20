@@ -34,8 +34,8 @@
     /**
      * @brief Khai báo trạng thái TSM cho tác vụ nháy LED
      */
-    #define STATE_BLINK_IDLE        (0u)
-    #define STATE_BLINK_ACTIVE      (1u)
+    #define STATE_BLINK_IDLE        (0xAF3u)
+    #define STATE_BLINK_ACTIVE      (0xAF4u)
 
   #ifdef __cplusplus
   }
