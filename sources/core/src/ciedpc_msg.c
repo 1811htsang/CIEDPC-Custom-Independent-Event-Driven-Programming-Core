@@ -111,17 +111,17 @@ void ciedpc_msg_pool_init() {
 	// Khởi tạo NORM Pool
 	internal_ciedpc_msg_pool_init(
 		&g_norm_pool_ctrl, norm_pool, (ui8*)norm_pool_data, CIEDPC_MSG_TYPE_NORM,
-		CIEDPC_MSG_NORM_QUEUE_SIZE, CIEDPC_MSG_NORM_DATA_MAX, 0
+		CIEDPC_MSG_NORM_QUEUE_SIZE, CIEDPC_MSG_NORM_DATA_MAX, CIEDPC_MSG_NORM_DATA_MAX
 	);
 	// Khởi tạo ALLOC Pool
 	internal_ciedpc_msg_pool_init(
 		&g_alloc_pool_ctrl, alloc_pool, (ui8*)alloc_pool_data, CIEDPC_MSG_TYPE_ALLOC,
-		CIEDPC_MSG_ALLOC_QUEUE_SIZE, CIEDPC_MSG_ALLOC_DATA_MAX, 0
+		CIEDPC_MSG_ALLOC_QUEUE_SIZE, CIEDPC_MSG_ALLOC_DATA_MAX, CIEDPC_MSG_ALLOC_DATA_MAX
 	);
 	// Khởi tạo EXTAL Pool
 	internal_ciedpc_msg_pool_init(
 		&g_extal_pool_ctrl, extal_pool, (ui8*)extal_pool_data, CIEDPC_MSG_TYPE_EXTAL,
-		CIEDPC_MSG_EXTAL_QUEUE_SIZE, CIEDPC_MSG_EXTAL_DATA_MAX, 0
+		CIEDPC_MSG_EXTAL_QUEUE_SIZE, CIEDPC_MSG_EXTAL_DATA_MAX, CIEDPC_MSG_EXTAL_DATA_MAX
 	);
 
 	// Khởi tạo ISR Pool
@@ -222,7 +222,8 @@ void internal_ciedpc_msg_pool_init(
 		return;
 	}
 
-	// Kiểm tra nếu pool_type không phải là CIEDPC_MSG_TYPE_BLANK mà data_mem lại NULL thì coi như không phù hợp và trả về
+	// Kiểm tra nếu init Blank Pool thì không cần xử lý thêm, chỉ có Blank Pool mới có thể có data_mem là NULL và data_size là 0, 
+	// các Pool khác nếu không có vùng dữ liệu thì sẽ không khởi tạo Pool vì sẽ lãng phí bộ nhớ.
 	if (pool_type != CIEDPC_MSG_TYPE_BLANK && !data_mem) {
 		return;
 	}

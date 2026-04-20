@@ -65,6 +65,8 @@
 
 		/**
 		 * @brief Khởi tạo hệ thống Timer (gọi trong ciedpc_init)
+		 * @attention Mặc định các timer type là One-shot, 
+		 * 						người dùng sẽ thiết lập lại loại timer khi gọi ciedpc_timer_set
 		 */
 		void ciedpc_timer_init(void);
 

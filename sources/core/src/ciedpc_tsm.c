@@ -32,7 +32,7 @@ void ciedpc_tsm_init(
 	tsm_table->state_count = state_count;
 	tsm_table->on_state_changed = on_state_changed;
 
-	const tsm_state_desc_t* desc = &tsm_table->state_table[initial_state_id - CIEDPC_TSM_STATE_MIN];
+	const tsm_state_desc_t* desc = &tsm_table->state_table[initial_state_id - CIEDPC_TSM_STATE_MIN - CIEDPC_TSM_STATE_OFFSET];
 	if (desc->on_entry) {
 			ciedpc_msg_t m = { .sig = CIEDPC_TSM_SIG_ENTRY };
 			desc->on_entry(&m);
@@ -57,7 +57,7 @@ void ciedpc_tsm_trans(ciedpc_tsm_t* tsm_table, tsm_state_id_t state_id) {
 		}
 
 		// Thực hiện exit trạng thái trước
-		const tsm_state_desc_t* cur_desc = &tsm_table->state_table[tsm_table->cur_state - CIEDPC_TSM_STATE_MIN];
+		const tsm_state_desc_t* cur_desc = &tsm_table->state_table[tsm_table->cur_state - CIEDPC_TSM_STATE_MIN - CIEDPC_TSM_STATE_OFFSET];
     if (cur_desc->on_exit) {
         ciedpc_msg_t msg = { .sig = CIEDPC_TSM_SIG_EXIT };
         cur_desc->on_exit(&msg);
@@ -70,7 +70,7 @@ void ciedpc_tsm_trans(ciedpc_tsm_t* tsm_table, tsm_state_id_t state_id) {
 		tsm_table->cur_state = next_state;
 
 		// Thực thi entry trạng thái mới
-		const tsm_state_desc_t* next_desc = &tsm_table->state_table[next_state - CIEDPC_TSM_STATE_MIN];
+		const tsm_state_desc_t* next_desc = &tsm_table->state_table[next_state - CIEDPC_TSM_STATE_MIN - CIEDPC_TSM_STATE_OFFSET];
     if (next_desc->on_entry) {
         ciedpc_msg_t msg = { .sig = CIEDPC_TSM_SIG_ENTRY };
         next_desc->on_entry(&msg);
@@ -88,7 +88,7 @@ void ciedpc_tsm_trans(ciedpc_tsm_t* tsm_table, tsm_state_id_t state_id) {
 
 void ciedpc_tsm_dispatch(ciedpc_tsm_t* tsm_table, ciedpc_msg_t* msg) {
 	if (tsm_table && msg) {
-		const tsm_state_desc_t* desc = &tsm_table->state_table[tsm_table->cur_state - CIEDPC_TSM_STATE_MIN];
+		const tsm_state_desc_t* desc = &tsm_table->state_table[tsm_table->cur_state - CIEDPC_TSM_STATE_MIN - CIEDPC_TSM_STATE_OFFSET];
 
 		for (int index = 0; index < desc->trans_count; index++) {
 			if (desc->transitions[index].sig == msg->sig) {
