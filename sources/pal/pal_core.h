@@ -76,7 +76,7 @@
      *            bao gồm các trạng thái như OK, ERROR, BUSY, TIMEOUT, DONE, NRDY và RDY, 
      *            giúp người dùng dễ dàng xác định kết quả của các thao tác và xử lý lỗi một cách hiệu quả.
      */
-    typedef enum {
+    typedef enum RETR_STAT {
 			STAT_OK       = 0x00U,
 			STAT_ERROR    = 0x01U,
 			STAT_BUSY     = 0x02U,
@@ -124,18 +124,18 @@
      * @brief Tìm bit có trọng số cao nhất (Dùng cho Priority Lookup)
      * @return 0-15 (vị trí bit) hoặc 0xFF nếu mask = 0
      */
-    extern ui8 pal_math_get_highest_bit16(ui16 mask);
+    ui8 pal_math_get_highest_bit16(ui16 mask);
 
     /**
      * @brief Lấy tick hệ thống hiện tại (ví dụ: số ms kể từ khi khởi động)
      * @return ui32 Tick hệ thống hiện tại
      */
-    extern ui32 pal_sys_get_tick(void);
+    ui32 pal_sys_get_tick(void);
 
     /**
      * @brief Reset hệ thống (ví dụ: khởi động lại phần cứng hoặc ứng dụng)
      */
-    extern void pal_sys_reset(void);
+    void pal_sys_reset(void);
 
     /**
      * @brief Xử lý lỗi nghiêm trọng (Core Panic)
@@ -143,7 +143,7 @@
      * @param line Số dòng chứa lỗi
      * @param msg Thông báo lỗi
      */
-    extern void pal_sys_fatal(const char* file, ui32 line, const char* msg);
+    void pal_sys_fatal(const char* file, ui32 line, const char* msg);
 
     /**
      * @brief Macro tiện lợi để gọi hàm panic với thông tin file và line tự động điền
