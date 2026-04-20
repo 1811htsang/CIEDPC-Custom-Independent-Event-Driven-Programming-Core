@@ -31,14 +31,6 @@
     #define CIEDPC_CORE_NAME        "CIEDPC"
 
     /**
-     * @brief Định nghĩa các hằng số cho tín hiệu hệ thống và tín hiệu tự định nghĩa của người dùng
-     * @attention Tín hiệu tự định nghĩa của người dùng được thiết kế tuân thủ theo encoding `0xFx`,
-     *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF), 
-     *            cho phép người dùng tạo ra tối đa 16 tín hiệu tùy chỉnh khác nhau.
-     */
-    #define CIEDPC_USER_DEFINE_SIG				(0xF0u) 
-
-    /**
      * @brief Định nghĩa các hằng số cho ID của tác vụ bình thường
      * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xEx`, 
      *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
@@ -53,8 +45,9 @@
     #define CIEDPC_TASK_NORM_USR_ID							(0xE4) // Tác vụ người dùng
     #define CIEDPC_TASK_NORM_IDLE_ID						(0xE5) // Tác vụ trống
 		#define CIEDPC_TASK_NORM_EOT_ID							(0xE6) // Kết thúc danh sách tác vụ
-		#define CIEDPC_TASK_NORM_MIN_ID 						(0xE7) // ID đầu tiên
+		#define CIEDPC_TASK_NORM_MIN_ID 						(0xE0) // ID đầu tiên
 		#define CIEDPC_TASK_NORM_MAX_ID							(0xEF) // ID cuối cùng
+    #define CIEDPC_TASK_NORM_OFFSET						  (0x06) // Offset để tránh trùng với các tác vụ khác
 
     /**
      * @brief Định nghĩa các hằng số cho ID của tác vụ polling
@@ -69,6 +62,7 @@
 		#define CIEDPC_TASK_POLLING_EOT_ID         	(0xDF) // Kết thúc danh sách tác vụ polling
 		#define CIEDPC_TASK_POLLING_MIN_ID         	(0xD0) // ID đầu tiên
 		#define CIEDPC_TASK_POLLING_MAX_ID         	(0xDF) // ID cuối cùng
+    #define CIEDPC_TASK_POLLING_OFFSET          (0x04) // Offset để tránh trùng với các tác vụ khác
 
 		/**
      * @brief Định nghĩa các hằng số cho mức độ ưu tiên của tác vụ trong hệ thống CIEDPC
@@ -105,6 +99,9 @@
 		#define CIEDPC_FSM_SIG_ENTRY    (0xB0u)
 		#define CIEDPC_FSM_SIG_EXIT     (0xB1u)
 		#define CIEDPC_FSM_SIG_INIT     (0xB2u)
+    #define CIEDPC_FSM_SIG_MIN      (0xB0u) // ID thấp nhất
+    #define CIEDPC_FSM_SIG_MAX      (0xBFu) // ID cao nhất
+    #define CIEDPC_FSM_SIG_OFFSET   (0x02u) // Offset để tránh trùng với các tín hiệu khác
 
     /**
 		 * @brief Khai báo dải tín hiệu TSM
@@ -115,18 +112,25 @@
 		#define CIEDPC_TSM_SIG_ENTRY    (0xA0u)
 		#define CIEDPC_TSM_SIG_EXIT     (0xA1u)
 		#define CIEDPC_TSM_SIG_INIT     (0xA2u)
+    #define CIEDPC_TSM_SIG_MIN      (0xA0u) // ID thấp nhất
+    #define CIEDPC_TSM_SIG_MAX      (0xAFu) // ID cao nhất
+    #define CIEDPC_TSM_SIG_OFFSET   (0x03u) // Offset để tránh trùng với các tín hiệu khác
 
 		/**
 		 * @brief Khai báo dải trạng thái TSM
 		 * @attention Các tín hiệu này được thiết kế tuân thủ theo encoding `0xAFx`,
 		 * 						trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
 		 * 						cho phép hệ thống CIEDPC quản lý tối đa 16 tín hiệu
+     * @attention Do tồn tại các trạng thái đặc biệt như BACK, STAY và RESET, 
+     *            nên dải trạng thái TSM được thiết kế có offset là 0x003 
+     *            để tránh trùng lặp với các trạng thái đặc biệt này.
 		 */
 		#define CIEDPC_TSM_STATE_BACK   (0xAF0u) // Quay lại trạng thái cũ
 		#define CIEDPC_TSM_STATE_STAY   (0xAF1u) // Giữ nguyên trạng thái hiện tại
 		#define CIEDPC_TSM_STATE_RESET  (0xAF2u) // Đặt lại về trạng thái ban đầu
 		#define CIEDPC_TSM_STATE_MIN		(0xAF0u) // ID thấp nhất
 		#define CIEDPC_TSM_STATE_MAX 		(0xAFFu) // ID cao nhất
+    #define CIEDPC_TSM_STATE_OFFSET (0x003u) // Offset để tránh trùng với các trạng thái đặc biệt
 
     /**
      * @brief Khởi tạo toàn bộ lõi CIEDPC (Pools, Timers, Task Manager)

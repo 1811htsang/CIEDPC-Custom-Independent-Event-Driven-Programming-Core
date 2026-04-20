@@ -114,28 +114,33 @@
     typedef void (*ciedpc_void_func_t)(void);
 
     /**
+     * @brief Khai báo hàm khởi tạo PAL Core cho nền tảng
+     */
+    CIEDPC_ATTR_WEAK void pal_core_init(void);
+
+    /**
      * @brief Khai báo các hàm PAL Core cần thiết cho việc triển khai đa nền tảng
      */
 
-    void pal_enter_critical(void);
-    void pal_exit_critical(void);
+    CIEDPC_ATTR_WEAK void pal_enter_critical(void);
+    CIEDPC_ATTR_WEAK void pal_exit_critical(void);
 
     /**
      * @brief Tìm bit có trọng số cao nhất (Dùng cho Priority Lookup)
      * @return 0-15 (vị trí bit) hoặc 0xFF nếu mask = 0
      */
-    ui8 pal_math_get_highest_bit16(ui16 mask);
+    CIEDPC_ATTR_WEAK ui8 pal_math_get_highest_bit16(ui16 mask);
 
     /**
      * @brief Lấy tick hệ thống hiện tại (ví dụ: số ms kể từ khi khởi động)
      * @return ui32 Tick hệ thống hiện tại
      */
-    ui32 pal_sys_get_tick(void);
+    CIEDPC_ATTR_WEAK ui32 pal_sys_get_tick(void);
 
     /**
      * @brief Reset hệ thống (ví dụ: khởi động lại phần cứng hoặc ứng dụng)
      */
-    void pal_sys_reset(void);
+    CIEDPC_ATTR_WEAK void pal_sys_reset(void);
 
     /**
      * @brief Xử lý lỗi nghiêm trọng (Core Panic)
@@ -143,7 +148,7 @@
      * @param line Số dòng chứa lỗi
      * @param msg Thông báo lỗi
      */
-    void pal_sys_fatal(const char* file, ui32 line, const char* msg);
+    CIEDPC_ATTR_WEAK void pal_sys_fatal(const char* file, ui32 line, const char* msg);
 
     /**
      * @brief Macro tiện lợi để gọi hàm panic với thông tin file và line tự động điền
