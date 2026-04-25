@@ -44,10 +44,10 @@
     #define CIEDPC_TASK_NORM_DBG_ID							(0xE3) // Tác vụ debug
     #define CIEDPC_TASK_NORM_USR_ID							(0xE4) // Tác vụ người dùng
     #define CIEDPC_TASK_NORM_IDLE_ID						(0xE5) // Tác vụ trống
-		#define CIEDPC_TASK_NORM_EOT_ID							(0xE6) // Kết thúc danh sách tác vụ
+		#define CIEDPC_TASK_NORM_EOT_ID							(0xEF) // Kết thúc danh sách tác vụ
 		#define CIEDPC_TASK_NORM_MIN_ID 						(0xE0) // ID đầu tiên
 		#define CIEDPC_TASK_NORM_MAX_ID							(0xEF) // ID cuối cùng
-    #define CIEDPC_TASK_NORM_OFFSET						  (0x06) // Offset để tránh trùng với các tác vụ khác
+    #define CIEDPC_TASK_NORM_OFFSET						  (0x05) // Offset để tránh trùng với các tác vụ khác
 
     /**
      * @brief Định nghĩa các hằng số cho ID của tác vụ polling

@@ -44,7 +44,7 @@
 			uint32_t fill_size; 
 			uint32_t buffer_size;
 			uint32_t element_size;
-			uint8_t* buffer;
+			uint32_t* buffer;
 		} fifo_t;
 
 		/**
@@ -95,18 +95,18 @@
 		 * 
 		 * @param fifo Con trỏ đến cấu trúc FIFO cần thêm phần tử
 		 * @param data Con trỏ đến dữ liệu cần thêm vào FIFO
-		 * @return uint8_t Trả về trạng thái của thao tác thêm phần tử vào FIFO
+		 * @return uint32_t Trả về trạng thái của thao tác thêm phần tử vào FIFO
 		 */
-		uint8_t	fifo_put(fifo_t* fifo, void* data);
+		uint32_t	fifo_put(fifo_t* fifo, void* data);
 
 		/**
 		 * @brief Lấy phần tử ra khỏi FIFO
 		 * 
 		 * @param fifo Con trỏ đến cấu trúc FIFO cần lấy phần tử
 		 * @param data Con trỏ đến vùng nhớ để lưu dữ liệu lấy ra từ FIFO
-		 * @return uint8_t Trả về trạng thái của thao tác lấy phần tử ra khỏi FIFO
+		 * @return uint32_t Trả về trạng thái của thao tác lấy phần tử ra khỏi FIFO
 		 */
-		uint8_t	fifo_get(fifo_t* fifo, void* data);
+		uint32_t	fifo_get(fifo_t* fifo, void* data);
 
 	#ifdef __cplusplus
 	}

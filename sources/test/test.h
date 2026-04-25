@@ -21,8 +21,8 @@
     /**
      * @brief Khai báo các task ID
      */
-    #define TASK_NORM_CONTROLLER_ID  (0xDF4) // ID của tác vụ điều khiển
-    #define TASK_NORM_BLINKER_ID     (0xDF5) // ID của tác vụ nháy LED
+    #define TASK_NORM_CONTROLLER_ID  (0xE6) // ID của tác vụ điều khiển
+    #define TASK_NORM_BLINKER_ID     (0xE7) // ID của tác vụ nháy LED
 
      /**
      * @brief Khai báo các tín hiệu

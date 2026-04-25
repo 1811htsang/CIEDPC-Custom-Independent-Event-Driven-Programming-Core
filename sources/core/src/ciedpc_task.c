@@ -170,7 +170,7 @@ void internal_ciedpc_task_put_to_queue(task_id_t tid, ciedpc_msg_t* msg) {
   pal_enter_critical();
 
   // Đưa tin nhắn vào hàng đợi của tác vụ
-  fifo_put(&task->msg_queue, msg);
+  fifo_put(&task->msg_queue, (ciedpc_msg_t*)(&msg));
 
   // Exit critical section
   pal_exit_critical();

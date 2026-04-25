@@ -50,21 +50,21 @@
 			struct ciedpc_msg_t* next;
 
 			/* Thông tin điều hướng */
-			ui8 src_task_id; 		/* ID Nguồn */
-			ui8 des_task_id;	 	/* ID Đích */
-			ui8 sig; 						/* Tín hiệu của tin nhắn */
+			ui16 src_task_id; 		/* ID Nguồn */
+			ui16 des_task_id;	 	/* ID Đích */
+			ui16 sig; 						/* Tín hiệu của tin nhắn */
 			
 			/* Quản lý bộ nhớ & Pool */
-			ui8  type;          /* ciedpc_msg_type_t */
-			ui8  ref_count;     /* Số lượng tham chiếu (dùng cho broadcast) */
+			ui16  type;          /* ciedpc_msg_type_t */
+			ui16  ref_count;     /* Số lượng tham chiếu (dùng cho broadcast) */
 
 			/* Payload dữ liệu */
-			ui8* data;          /* Con trỏ đến vùng dữ liệu */
+			ui16* data;          /* Con trỏ đến vùng dữ liệu */
 
 			/* Metadata hỗ trợ interface */
 			struct {
-				ui8 if_src_type;
-				ui8 if_sig;
+				ui16 if_src_type;
+				ui16 if_sig;
 			} interface;
 
 			/* Tùy chọn debug */
@@ -79,8 +79,8 @@
 		 * @param sig: Tín hiệu của tin nhắn từ ISR
 		 */
 		typedef struct ciedpc_msg_isr_t {
-			ui8 des_task_id; 	
-			ui8 sig; 					
+			ui16 des_task_id; 	
+			ui16 sig; 					
 		} ciedpc_msg_isr_t;
 
 		/**
@@ -95,7 +95,7 @@
 		 * @param size: Kích thước dữ liệu yêu cầu (0 nếu là tin nhắn thuần túy)
 		 * @return ciedpc_msg_t*: Con trỏ tin nhắn hoặc NULL nếu hết bộ nhớ
 		 */
-		ciedpc_msg_t* ciedpc_msg_alloc(ui16 des_task_id, ui8 sig, ui16 size);
+		ciedpc_msg_t* ciedpc_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size);
 
 		/**
 		 * @brief Hàm giải phóng tin nhắn
@@ -131,7 +131,7 @@
 		 * @return RETR_STAT Trạng thái của việc enqueue tín hiệu vào hàng đợi ISR
 		 * @attention Hàm này được thiết kế tách biệt dành cho việc xử lý với ISR 
 		 */
-		RETR_STAT internal_ciedpc_msg_enqueue_isr_sig(task_id_t tid, ui8 sig);
+		RETR_STAT internal_ciedpc_msg_enqueue_isr_sig(task_id_t tid, ui16 sig);
 
 		/**
 		 * @brief Xả hàng đợi tin nhắn trong ngữ cảnh ISR để giải phóng các tin nhắn đang bị giữ trong hàng đợi ISR

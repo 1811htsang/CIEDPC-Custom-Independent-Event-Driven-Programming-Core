@@ -10,6 +10,7 @@
  */
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "ciedpc_core.h"
 #include "ciedpc_timer.h"
 #include "ciedpc_task.h"
@@ -164,6 +165,8 @@ void ciedpc_timer_tick(void) {
 			}
 
 			if (curr->counter == 0) {
+				printf("[Timer] Timer expired for Task ID: 0x%02X, Signal: 0x%02X\n", curr->des_task_id, curr->sig);
+
 				/* 1. Đã hết hạn -> Publish Event tới Task đích */
 				// Ở đây dùng ciedpc_task_post_isr vì chúng ta đang ở ngữ cảnh ngắt tick
 				ciedpc_task_post_isr(curr->des_task_id, curr->sig);

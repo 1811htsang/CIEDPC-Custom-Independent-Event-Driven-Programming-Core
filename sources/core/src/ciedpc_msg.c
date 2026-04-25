@@ -131,7 +131,7 @@ void ciedpc_msg_pool_init() {
 	);
 }
 
-ciedpc_msg_t* ciedpc_msg_alloc(ui16 des_task_id, ui8 sig, ui16 size) {
+ciedpc_msg_t* ciedpc_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 	ciedpc_msg_t *msg = NULL;
 	ciedpc_msg_pool_header_t* pool_header = internal_ciedpc_msg_find_best_pool(size);
 
@@ -266,7 +266,7 @@ void internal_ciedpc_msg_pool_init(
 				 * @attention Lưu ý rằng [0][0-7], [1][8-15], ... Đây chính là nguyên lý trải phẳng của mảng 2 chiều thành mảng 1 chiều, 
 				 * 						giúp việc quản lý bộ nhớ trở nên đơn giản và hiệu quả hơn.
 				 */
-				pool[index].data = data_mem + (index * data_size);
+				pool[index].data = (ui16*)(data_mem + (index * data_size));
 
 				// Xóa sạch vùng dữ liệu
 				memset(pool[index].data, 0, data_size);
@@ -409,7 +409,7 @@ void internal_ciedpc_msg_pool_panic(ui8 pool_id) {
 
 }
 
-RETR_STAT internal_ciedpc_msg_enqueue_isr_sig(task_id_t tid, ui8 sig) {
+RETR_STAT internal_ciedpc_msg_enqueue_isr_sig(task_id_t tid, ui16 sig) {
 	ciedpc_msg_isr_t raw_sig;
 	raw_sig.des_task_id = tid;
 	raw_sig.sig = sig;

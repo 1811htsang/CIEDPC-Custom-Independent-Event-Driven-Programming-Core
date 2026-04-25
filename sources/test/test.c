@@ -62,7 +62,7 @@ void task_controller_handler(ciedpc_msg_t* msg) {
 /* --- BẢNG TASK TỔNG --- */
 task_norm_t app_task_table[] = {
   { TASK_NORM_CONTROLLER_ID, CIEDPC_TASK_PRI_LEVEL_5, {0}, {0}, task_controller_handler, {0}, ctrl_q_mem },
-  { TASK_NORM_BLINKER_ID,    CIEDPC_TASK_PRI_LEVEL_5, {0}, {0}, task_blinker_handler,    {0}, blink_q_mem },
+  { TASK_NORM_BLINKER_ID,    CIEDPC_TASK_PRI_LEVEL_6, {0}, {0}, task_blinker_handler,    {0}, blink_q_mem },
   { CIEDPC_TASK_NORM_EOT_ID, CIEDPC_TASK_PRI_LEVEL_0, {0}, {0}, NULL, {0}, NULL }
 };
 
@@ -78,6 +78,9 @@ void* linux_tick_thread(void* arg) {
 /* --- MAIN TEST --- */
 int main() {
   printf("=== CIEDPC LINUX INTEGRATION TEST ===\n");
+
+  /* 0. Init PAL */
+  pal_linux_init_env();
 
   /* 1. Init Core Modules */
   ciedpc_msg_pool_init();
@@ -98,7 +101,7 @@ int main() {
   /* 5. Chạy Scheduler (Vòng lặp Kernel) */
   while (1) {
     ciedpc_task_scheduler();
-    usleep(100); // Tránh chiếm 100% CPU của Linux
+    usleep(100); // Sleep để tránh CPU hogging
   }
 
   return 0;
