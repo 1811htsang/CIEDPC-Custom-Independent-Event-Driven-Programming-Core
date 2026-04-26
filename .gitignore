@@ -58,7 +58,7 @@ dkms.conf
 sketch/.obsidian
 
 # Test build output
-sources/test/build/*
+sources/test/*/build/
 
 # VSCode settings
 .vscode/settings.json

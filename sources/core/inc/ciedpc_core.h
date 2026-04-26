@@ -42,8 +42,8 @@
     #define CIEDPC_TASK_NORM_IF_ID		    			(0xE1) // Tác vụ giao tiếp
     #define CIEDPC_TASK_NORM_SYS_ID							(0xE2) // Tác vụ hệ thống (info + memrp)
     #define CIEDPC_TASK_NORM_DBG_ID							(0xE3) // Tác vụ debug
-    #define CIEDPC_TASK_NORM_USR_ID							(0xE4) // Tác vụ người dùng
-    #define CIEDPC_TASK_NORM_IDLE_ID						(0xE5) // Tác vụ trống
+    #define CIEDPC_TASK_NORM_USR_ID							(0xE4) // Tác vụ người dùng (dùng để entry)
+    #define CIEDPC_TASK_NORM_IDLE_ID						(0xE5) // Tác vụ rảnh
 		#define CIEDPC_TASK_NORM_EOT_ID							(0xEF) // Kết thúc danh sách tác vụ
 		#define CIEDPC_TASK_NORM_MIN_ID 						(0xE0) // ID đầu tiên
 		#define CIEDPC_TASK_NORM_MAX_ID							(0xEF) // ID cuối cùng

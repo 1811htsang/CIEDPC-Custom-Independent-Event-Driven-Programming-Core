@@ -6,19 +6,19 @@ set(PLATFORM "LINUX" CACHE STRING "Target platform: LINUX, STM32, ESP32")
 
 # 2. Danh sách file nguồn LÕI (Không đổi dù sang nền tảng nào)
 set(CORE_SOURCES
-  ../core/src/ciedpc_fsm.c
-  ../core/src/ciedpc_tsm.c
-  ../core/src/ciedpc_msg.c
-  ../core/src/ciedpc_task.c
-  ../core/src/ciedpc_timer.c
-  ../common/container/fifo/fifo.c
+  ../../core/src/ciedpc_fsm.c
+  ../../core/src/ciedpc_tsm.c
+  ../../core/src/ciedpc_msg.c
+  ../../core/src/ciedpc_task.c
+  ../../core/src/ciedpc_timer.c
+  ../../common/container/fifo/fifo.c
 )
 
 # 3. Cấu hình file nguồn theo NỀN TẢNG (PAL Implementation)
 if(PLATFORM STREQUAL "LINUX")
   message(STATUS "Configuring for Linux Simulation...")
   set(PAL_SOURCES 
-      ../pal/arch/linux/linux_arch.c
+      ../../pal/arch/linux/linux_arch.c
   )
   # Thêm thư viện pthread cho Linux
   set(PLATFORM_LIBS pthread)
@@ -41,10 +41,10 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 # 6. Cấu hình Include Directories
 target_include_directories(${PROJECT_NAME} PRIVATE
-  ../core/inc/
-  ../common/container/fifo/
-  ../pal/
-  ../pal/arch/linux/   # Cần include cho từng arch cụ thể
+  ../../core/inc/
+  ../../common/container/fifo/
+  ../../pal/
+  ../../pal/arch/linux/   # Cần include cho từng arch cụ thể
   ./
 )
 
