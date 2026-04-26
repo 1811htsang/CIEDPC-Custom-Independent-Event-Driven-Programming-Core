@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "unistd.h"
 #include "ciedpc_core.h"
 #include "ciedpc_timer.h"
 #include "ciedpc_task.h"
@@ -140,6 +141,9 @@ RETR_STAT ciedpc_timer_remove(ui16 tid, ui8 sig) {
 			if (timer_ctrl.active_count > 0) {
 				timer_ctrl.active_count--;
 			}
+			
+			// Exit critical section
+			pal_exit_critical();
 
 			return STAT_OK; // Timer được xóa thành công
 		}
@@ -161,11 +165,23 @@ void ciedpc_timer_tick(void) {
 	while (curr) {
 		if (curr->is_active) {
 			if (curr->counter > 0) {
+				#ifdef CIEDPC_PLATFORM_LINUX
+					#define TASK_NORM_CONTROLLER_ID  (0xE6) // ID của tác vụ điều khiển
+					#define SIG_USR_STOP        	   (0x02u)
+					printf("[Timer Tick] Timer ticking: Task ID=%u, Signal=0x%02X, Counter=%u\n", curr->des_task_id, curr->sig, curr->counter);
+					if (curr->counter == 758) {
+						printf("[Timer Tick] Simulating random STOP signal at counter 758 for Task ID=%u\n", curr->des_task_id);
+						ciedpc_task_post_isr(TASK_NORM_CONTROLLER_ID, SIG_USR_STOP);
+					}
+				#endif
 				curr->counter--;
 			}
 
 			if (curr->counter == 0) {
-				printf("[Timer] Timer expired for Task ID: 0x%02X, Signal: 0x%02X\n", curr->des_task_id, curr->sig);
+				#ifdef CIEDPC_PLATFORM_LINUX
+					printf("[Timer] Timer expired: Task ID=%u, Signal=0x%02X\n", curr->des_task_id, curr->sig);
+					usleep(curr->period * 10); // Sleep for 3 * timer period to simulate processing delay and test timer accuracy under load
+				#endif
 
 				/* 1. Đã hết hạn -> Publish Event tới Task đích */
 				// Ở đây dùng ciedpc_task_post_isr vì chúng ta đang ở ngữ cảnh ngắt tick
