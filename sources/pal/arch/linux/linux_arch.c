@@ -33,6 +33,13 @@ static pthread_mutex_t ciedpc_mutex;
 static pthread_mutexattr_t mutex_attr;
 static ui32 start_tick_ms = 0;
 
+/* --- IMPLEMENTATION CHO CIEDPC_CORE.H --- */
+
+void ciedpc_core_init(void) {
+    pal_core_init();
+    /* Khởi tạo các thành phần khác của Core nếu cần */
+}
+
 /* --- IMPLEMENTATION CHO PAL_CORE.H --- */
 
 void pal_core_init(void) {
