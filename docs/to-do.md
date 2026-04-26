@@ -13,7 +13,7 @@
 - [x] Hoàn thiện timer driver implementation và tích hợp vào lõi CIEDPC.
 - [x] Hoàn thiện ISR Bridge implementation và tích hợp vào lõi CIEDPC.
 - [x] Thiết kế testing chức năng trên task, timer, isr, message pool, tsm.
-- [ ] Bổ sung thiết kế testing FSM cho task.
+- [ ] Bổ sung thiết kế testing FSM, MSG allocation cho task.
 - [ ] Viết tài liệu hướng dẫn sử dụng và phát triển lõi CIEDPC.
 - [ ] Import thiết kế vào STM32 nhằm thử nghiệm thực tế trên phần cứng.
 - [ ] Kiểm tra các data types sử dụng nhằm thu gọn memory footprint.

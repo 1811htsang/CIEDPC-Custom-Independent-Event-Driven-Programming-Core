@@ -55,4 +55,4 @@ dkms.conf
 *.dwo
 
 # Test build folder
-sources/test/build/
+sources/test/*
