@@ -362,6 +362,9 @@ ciedpc_msg_pool_header_t* internal_ciedpc_msg_find_best_pool(ui16 size) {
  * 
  */
 void ciedpc_msg_drain_isr_pool(void) {
+
+	pal_enter_critical(); // Đảm bảo an toàn khi truy cập hàng đợi ISR trong môi trường đa tác vụ hoặc ISR
+
 	while (!fifo_is_empty(&isr_pool)) {
 		ciedpc_msg_isr_t msg_isr;
 		fifo_get(&isr_pool, &msg_isr);
@@ -375,6 +378,8 @@ void ciedpc_msg_drain_isr_pool(void) {
 			internal_ciedpc_msg_pool_panic(CIEDPC_MSG_ISR_QUEUE_SIZE); // Sử dụng một mã lỗi đặc biệt cho Pool ISR
 		}
 	}
+
+	pal_exit_critical();
 }
 
 /**
@@ -413,14 +418,17 @@ RETR_STAT internal_ciedpc_msg_enqueue_isr_sig(task_id_t tid, ui16 sig) {
 	ciedpc_msg_isr_t raw_sig;
 	raw_sig.des_task_id = tid;
 	raw_sig.sig = sig;
+	RETR_STAT result = STAT_ERROR;
 
+	pal_enter_critical(); // Đảm bảo an toàn khi truy cập hàng đợi ISR trong môi trường đa tác vụ hoặc ISR
 	/* 
 	* Vì hàm này được gọi từ ISR, fifo_put PHẢI là lock-free 
 	* hoặc chúng ta bọc bảo vệ tối thiểu nếu cần 
 	*/
-	if (fifo_put(&isr_pool, &raw_sig) == RET_FIFO_OK) {
-		return STAT_OK;
+	if (fifo_put(&isr_pool, (ciedpc_msg_isr_t*)&raw_sig) == RET_FIFO_OK) {
+		result = STAT_OK;
 	}
 	
-	return STAT_ERROR; // Hàng đợi ISR đầy
+	pal_exit_critical();
+	return result; // Hàng đợi ISR đầy
 }
