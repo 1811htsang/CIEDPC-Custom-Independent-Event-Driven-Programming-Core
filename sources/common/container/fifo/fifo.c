@@ -10,6 +10,8 @@
  */
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include "fifo.h"
 
 void fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t element_size) {
@@ -48,12 +50,18 @@ uint32_t fifo_put(fifo_t* fifo, void* data) {
 	}
 
 	if (data != NULL) {
+		/* 1. Tính toán địa chỉ đích bằng Byte Pointer Math */
+		// fifo->buffer là uint8_t*, cộng với offset tính bằng byte
+		uint8_t* p_dest = (uint8_t*)fifo->buffer + (fifo->tail_index * fifo->element_size);
+
+		/* 2. Thực hiện copy chính xác element_size bytes */
+		// Tuyệt đối KHÔNG ép kiểu (uint32_t*) cho 'data' và 'p_dest'
+		// memcpy sẽ tự động copy đúng số byte đã định nghĩa lúc fifo_init
+		memcpy(p_dest, data, fifo->element_size);
+
+		/* 3. Cập nhật quản lý FIFO */
 		fifo->fill_size++;
-
-		memcpy((uint32_t*)(fifo->buffer + fifo->tail_index * fifo->element_size), (uint32_t*)data, fifo->element_size);
-
-		next_tail_index = (++fifo->tail_index) % fifo->buffer_size;
-		fifo->tail_index = next_tail_index;
+		fifo->tail_index = (fifo->tail_index + 1) % fifo->buffer_size;
 	}
 	else {
 		return RET_FIFO_NG;
@@ -63,25 +71,24 @@ uint32_t fifo_put(fifo_t* fifo, void* data) {
 }
 
 uint32_t fifo_get(fifo_t* fifo, void* data) {
-	uint32_t next_head_index;
-
-	if (fifo_is_empty(fifo)) {
-		while (1) {
-			
-		}
-	}
-
-	if (data != NULL) {
-		memcpy((uint32_t*)data, (uint32_t*)(fifo->buffer + fifo->head_index * fifo->element_size),  fifo->element_size);
-
-		next_head_index = (++fifo->head_index) % fifo->buffer_size;
-		fifo->head_index = next_head_index;
-
-		fifo->fill_size--;
-	}
-	else {
+	if ((fifo == NULL) || (data == NULL) || (fifo->buffer == NULL)) {
 		return RET_FIFO_NG;
 	}
+
+	if (fifo_is_empty(fifo)) {
+		return RET_FIFO_NG;
+	}
+
+	/* 1. Lấy dữ liệu ở vị trí head hiện tại */
+	uint8_t* p_src = (uint8_t*)fifo->buffer + (fifo->head_index * fifo->element_size);
+	memcpy(data, p_src, fifo->element_size);
+
+	/* 2. Xóa hoàn toàn dữ liệu vừa lấy khỏi FIFO */
+	memset(p_src, 0, fifo->element_size);
+
+	/* 3. Cập nhật trạng thái FIFO */
+	fifo->head_index = (fifo->head_index + 1) % fifo->buffer_size;
+	fifo->fill_size--;
 
 	return RET_FIFO_OK;
 }
