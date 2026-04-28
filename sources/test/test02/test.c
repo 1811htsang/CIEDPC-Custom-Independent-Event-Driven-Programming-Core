@@ -21,9 +21,12 @@
  *            có thể điều chỉnh tùy theo nhu cầu của bài test, nhưng cần đảm bảo không vượt quá giới hạn của hệ thống CIEDPC.
  */
 
-static ciedpc_msg_t* usr_q_mem[8];
-static ciedpc_msg_t* a_q_mem[8];
-static ciedpc_msg_t* b_q_mem[8];
+sta ciedpc_msg_t* usr_q_mem[8];
+sta ciedpc_msg_t* a_q_mem[8];
+sta ciedpc_msg_t* b_q_mem[8];
+
+sta const char* data_a_to_b = "Hello from Task A!";
+sta const char* data_b_to_a = "Hello from Task B!";
 
 /**
  * @brief Định nghĩa handler cho task USR, task A và task B
@@ -32,8 +35,11 @@ static ciedpc_msg_t* b_q_mem[8];
 void task_usr_handler(ciedpc_msg_t* msg) {
   if (msg->sig == SIG_USR_START) {
     printf("[USR] Received START signal. Sending message to Task A...\n");
-    ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(CIEDPC_TASK_NORM_USR_ID, SIG_USR_START, 0);
+    ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(TASK_NORM_A_ID, SIG_USR_START, 0);
     ciedpc_task_post_msg(TASK_NORM_A_ID, msg_to_a);
+  } else if (msg->sig == SIG_USR_STOP) {
+    printf("[USR] Received STOP signal. Stopping the system...\n");
+    // Thực hiện các hành động cần thiết để dừng hệ thống, có thể là gửi tín hiệu đến các tác vụ khác để dừng chúng
   }
 }
 
@@ -41,15 +47,23 @@ void task_a_handler(ciedpc_msg_t* msg) {
   switch (msg->sig) {
   case SIG_USR_START:
     printf("[Task A] Received START signal from USR. Sending message to Task B...\n");
-    const char* data = "Hello from Task A!";
-    ciedpc_msg_t* msg_to_b = ciedpc_msg_alloc(CIEDPC_TASK_NORM_USR_ID, SIG_TSK_A_TO_B, sizeof(data));
-    ciedpc_msg_set_data(msg_to_b, (const ui8*)data, sizeof(data));
+    ciedpc_msg_t* msg_to_b = ciedpc_msg_alloc(TASK_NORM_B_ID, SIG_TSK_A_TO_B, sizeof(char*));
+    ciedpc_msg_set_data_ref(msg_to_b, (char*)&data_a_to_b); // Truyền địa chỉ của chuỗi dữ liệu
     ciedpc_task_post_msg(TASK_NORM_B_ID, msg_to_b);
+    printf("[Task A] Message sent to Task B. Waiting for response...\n");
     break;
   case SIG_TSK_B_TO_A:
-    printf("[Task A] Received message from Task B. Test completed successfully!\n");
+    printf("[Task A] Received message from Task B\n");
+    char* received_str = *(char**)(msg->data);
+    printf("[Task A] Data from Task B: %c\n", received_str); // Truy cập dữ liệu thông qua con trỏ địa chỉ
+    
+    for (int i = 0; i < (int)strlen(received_str); i++) { // Giả sử dữ liệu là một chuỗi ký tự, in ra từng ký tự một
+      printf("%c", received_str[i]);
+    }
+    printf("\n[Task A] Sending STOP signal to USR...\n");
     ciedpc_msg_t* stop_msg = ciedpc_msg_alloc(CIEDPC_TASK_NORM_USR_ID, SIG_USR_STOP, 0);
     ciedpc_task_post_msg(CIEDPC_TASK_NORM_USR_ID, stop_msg);
+    printf("[Task A] Sent STOP signal to USR. Exiting...\n");
     break;
   default:
     break;
@@ -59,11 +73,21 @@ void task_a_handler(ciedpc_msg_t* msg) {
 void task_b_handler(ciedpc_msg_t* msg) {
   switch (msg->sig) {
   case SIG_TSK_A_TO_B:
-    printf("[Task B] Received message from Task A. Sending message back to Task A...\n");
-    const char* data = "Hello from Task B!";
-    ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(CIEDPC_TASK_NORM_USR_ID, SIG_TSK_B_TO_A, sizeof(data));
-    ciedpc_msg_set_data(msg_to_a, (const ui8*)data, sizeof(data));
+    printf("[Task B] Received message from Task A.\n");
+    char* received_str = *(char**)(msg->data);
+    printf("[Task B] Data from Task A: %c\n", received_str); // Truy cập dữ liệu thông qua con trỏ địa chỉ
+    for (int i = 0; i < (int)strlen(received_str); i++) { // Giả sử dữ liệu là một chuỗi ký tự, in ra từng ký tự một
+      printf("%c", received_str[i]);
+    }
+    printf("\n[Task B] Sending message back to Task A...\n");
+    ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(TASK_NORM_A_ID, SIG_TSK_B_TO_A, sizeof(char*));
+    ciedpc_msg_set_data_ref(msg_to_a, (char*)&data_b_to_a);
+    /**
+     * @brief Thử nghiệm việc truyền địa chỉ làm dữ liệu của tin nhắn, 
+     *        Giảm tải bộ nhớ bằng cách không sao chép dữ liệu mà chỉ truyền địa chỉ của biến chứa dữ liệu,
+     */
     ciedpc_task_post_msg(TASK_NORM_A_ID, msg_to_a);
+    printf("[Task B] Message sent back to Task A. Waiting for next message...\n");
     break;
   default:
     break;
@@ -77,7 +101,7 @@ void task_b_handler(ciedpc_msg_t* msg) {
  */
 task_norm_t app_task_table[] = {
   { CIEDPC_TASK_NORM_USR_ID,  CIEDPC_TASK_PRI_LEVEL_8, {0}, {0}, task_usr_handler,  {0}, usr_q_mem  },
-  { TASK_NORM_A_ID,           CIEDPC_TASK_PRI_LEVEL_6, {0}, {0}, task_a_handler,    {0}, a_q_mem    },
+  { TASK_NORM_A_ID,           CIEDPC_TASK_PRI_LEVEL_7, {0}, {0}, task_a_handler,    {0}, a_q_mem    },
   { TASK_NORM_B_ID,           CIEDPC_TASK_PRI_LEVEL_6, {0}, {0}, task_b_handler,    {0}, b_q_mem    },
   { CIEDPC_TASK_NORM_EOT_ID,  CIEDPC_TASK_PRI_LEVEL_0, {0}, {0}, NULL,              {0}, NULL       }
 };

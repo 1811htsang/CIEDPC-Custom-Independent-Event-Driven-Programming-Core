@@ -28,30 +28,19 @@
 	#define CIEDPC_MSG_BLANK_QUEUE_SIZE  (8u) 	// units
 #endif // -> equipvalent to 8 units * 4 bytes = 32 bytes
 
-/*
- *  
- */
-
-#ifndef CIEDPC_MSG_NORM_QUEUE_SIZE
-	#define CIEDPC_MSG_NORM_QUEUE_SIZE   (8u) 	// units
-#endif 
-#ifndef CIEDPC_MSG_NORM_DATA_MAX
-	#define CIEDPC_MSG_NORM_DATA_MAX    (2u) 		// bytes
-#endif // -> equipvalent to 8 units * (2 bytes + sizeof(ciedpc_msg_t)) = 8 * (2 + 4) = 24 bytes
-
 #ifndef CIEDPC_MSG_ALLOC_QUEUE_SIZE
-	#define CIEDPC_MSG_ALLOC_QUEUE_SIZE  (16u)  // units
+	#define CIEDPC_MSG_ALLOC_QUEUE_SIZE (16u)  // units
 #endif
 #ifndef CIEDPC_MSG_ALLOC_DATA_MAX
-	#define CIEDPC_MSG_ALLOC_DATA_MAX   (4u) 		// bytes
-#endif // -> equipvalent to 16 units * (4 bytes + sizeof(ciedpc_msg_t)) = 16 * (4 + 4) = 128 bytes
+	#define CIEDPC_MSG_ALLOC_DATA_MAX   (sizeof(void*) * 2u) // auto arrange depended on architecture
+#endif // -> equipvalent to 16 units * [(sizeof(void*) * 2u) + sizeof(ciedpc_msg_t)]
 
 #ifndef CIEDPC_MSG_EXTAL_QUEUE_SIZE
 	#define CIEDPC_MSG_EXTAL_QUEUE_SIZE  (16u) 	// units
 #endif
 #ifndef CIEDPC_MSG_EXTAL_DATA_MAX
-	#define CIEDPC_MSG_EXTAL_DATA_MAX   (4u) 		// bytes
-#endif // -> equipvalent to 16 units * (4 bytes + sizeof(ciedpc_msg_t)) = 16 * (4 + 4) = 128 bytes
+	#define CIEDPC_MSG_EXTAL_DATA_MAX   (sizeof(void*) * 4u) // auto arrange depended on architecture
+#endif // -> equipvalent to 16 units * [(sizeof(void*) * 4u) + sizeof(ciedpc_msg_t)]
 
 #ifndef CIEDPC_MSG_ISR_QUEUE_SIZE
 	#define CIEDPC_MSG_ISR_QUEUE_SIZE   (16u) 	// units
@@ -59,12 +48,14 @@
 
 /**
  * @brief Khai báo cấu trúc quản lý Pool tin nhắn
+ * @param free_list Con trỏ đến đầu của Pool tin nhắn
+ * @param used_count Số lượng tin nhắn đang được sử dụng trong Pool
+ * @param max_used Số lượng tin nhắn tối đa đã từng được sử dụng trong
  */
-
 typedef struct ciedpc_msg_pool_header_t {
-	ciedpc_msg_t* free_list; 	// Con trỏ đến đầu của Pool tin nhắn
-	ui8       used_count; // Số lượng tin nhắn đang được sử dụng trong Pool
-	ui8       max_used; 	// Số lượng tin nhắn tối đa đã từng được sử dụng trong Pool (dùng cho debug và tối ưu hóa)
+	ciedpc_msg_t* free_list;
+	ui8       used_count;
+	ui8       max_used;
 } ciedpc_msg_pool_header_t;
 
 /**
@@ -76,71 +67,49 @@ typedef struct ciedpc_msg_pool_header_t {
 /**
  * @brief Blank pool với kích thước là 8 32-bits units
  */
-
-CIEDPC_ATTR_SECTION(".ciedpc_msg_blank_pool") ciedpc_msg_pool_header_t g_blank_pool_ctrl;
 CIEDPC_ATTR_SECTION(".ciedpc_msg_blank_pool") static ciedpc_msg_t blank_pool[CIEDPC_MSG_BLANK_QUEUE_SIZE];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_blank_pool") ciedpc_msg_pool_header_t g_blank_pool_ctrl;
 
 /**
- * @brief Norm pool với kích thước là 8 16-bits units
+ * @brief Alloc pool với kích thước là 16 [sizeof(void*) * 2u] units
  * @example
- * 
- * | Index Data L->R  | [0] | [1] |
- * |------------------|-----|-----|
- * | Index Queue T->B | X   | X   |
- * | [0]              | ... | ... |
- * | [1]              | ... | ... |
- * | [...]            | ... | ... |
- * | [7]              | ... | ... |
+ * +-----------------------------------+-----+-----+-----+-------+----------------------+
+ * | Index Queue T->B Index Data L->R  | [0] | [1] | [2] | [...] | [sizeof(void*) * 2u] |
+ * +-----------------------------------+-----+-----+-----+-------+----------------------+
+ * | [0]                               | ... | ... | ... |   ... |                  ... |
+ * | [1]                               | ... | ... | ... |   ... |                  ... |
+ * | [...]                             | ... | ... | ... |   ... |                  ... |
+ * | [15]                              | ... | ... | ... |   ... |                  ... |
+ * +-----------------------------------+-----+-----+-----+-------+----------------------+
  * 
  */
-
-CIEDPC_ATTR_SECTION(".ciedpc_msg_norm_pool") ciedpc_msg_pool_header_t g_norm_pool_ctrl;
-CIEDPC_ATTR_SECTION(".ciedpc_msg_norm_pool") static ciedpc_msg_t norm_pool[CIEDPC_MSG_NORM_QUEUE_SIZE];
-CIEDPC_ATTR_SECTION(".ciedpc_msg_norm_pool") static ui8 norm_pool_data[CIEDPC_MSG_NORM_QUEUE_SIZE][CIEDPC_MSG_NORM_DATA_MAX];
-
-/**
- * @brief Alloc pool với kích thước là 16 32-bits units
- * @example
- * 
- * | Index Data L->R  | [0] | [1] | [2] | [3] |
- * |------------------|-----|-----|-----|-----|
- * | Index Queue T->B | X   | X   | X   | X   |
- * | [0]              | ... | ... | ... | ... |
- * | [1]              | ... | ... | ... | ... |
- * | [...]            | ... | ... | ... | ... |
- * | [15]             | ... | ... | ... | ... |
- * 
- */
-
-CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") ciedpc_msg_pool_header_t g_alloc_pool_ctrl;
 CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") static ciedpc_msg_t alloc_pool[CIEDPC_MSG_ALLOC_QUEUE_SIZE];
 CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") static ui8 alloc_pool_data[CIEDPC_MSG_ALLOC_QUEUE_SIZE][CIEDPC_MSG_ALLOC_DATA_MAX];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") ciedpc_msg_pool_header_t g_alloc_pool_ctrl;
+
 
 /**
- * @brief Extal pool với kích thước là 16 32-bits units
+ * @brief Extal pool với kích thước là 16 [sizeof(void*) * 4u] units
  * @example
- * 
- * | Index Data L->R  | [0] | [1] | [2] | [3] |
- * |------------------|-----|-----|-----|-----|
- * | Index Queue T->B | X   | X   | X   | X   |
- * | [0]              | ... | ... | ... | ... |
- * | [1]              | ... | ... | ... | ... |
- * | [...]            | ... | ... | ... | ... |
- * | [15]             | ... | ... | ... | ... |
+ * +-----------------------------------+-----+-----+-----+-------+----------------------+
+ * | Index Queue T->B Index Data L->R  | [0] | [1] | [2] | [...] | [sizeof(void*) * 4u] |
+ * +-----------------------------------+-----+-----+-----+-------+----------------------+
+ * | [0]                               | ... | ... | ... |   ... |                  ... |
+ * | [1]                               | ... | ... | ... |   ... |                  ... |
+ * | [...]                             | ... | ... | ... |   ... |                  ... |
+ * | [15]                              | ... | ... | ... |   ... |                  ... |
+ * +-----------------------------------+-----+-----+-----+-------+----------------------+
  * 
  */
-
-CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") ciedpc_msg_pool_header_t g_extal_pool_ctrl;
 CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") static ciedpc_msg_t extal_pool[CIEDPC_MSG_EXTAL_QUEUE_SIZE];
 CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") static ui8 extal_pool_data[CIEDPC_MSG_EXTAL_QUEUE_SIZE][CIEDPC_MSG_EXTAL_DATA_MAX];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") ciedpc_msg_pool_header_t g_extal_pool_ctrl;
 
 /**
  * @brief ISR pool với kích thước là 16 sizeof(ciedpc_msg_isr_t) units
- * 
  */
-
-CIEDPC_ATTR_SECTION(".ciedpc_msg_isr_pool") fifo_t isr_pool;
 CIEDPC_ATTR_SECTION(".ciedpc_msg_isr_pool") ciedpc_msg_isr_t isr_pool_buffer[CIEDPC_MSG_ISR_QUEUE_SIZE];
+CIEDPC_ATTR_SECTION(".ciedpc_msg_isr_pool") fifo_t isr_pool;
 
 /**
  * @brief Khai báo các hàm quản lý nội bộ
@@ -163,12 +132,6 @@ void ciedpc_msg_pool_init() {
 	internal_ciedpc_msg_pool_init(
 		&g_blank_pool_ctrl, blank_pool, NULL, CIEDPC_MSG_TYPE_BLANK, 
 		CIEDPC_MSG_BLANK_QUEUE_SIZE, 0, 0
-	);
-
-	// Khởi tạo NORM Pool
-	internal_ciedpc_msg_pool_init(
-		&g_norm_pool_ctrl, norm_pool, (ui8*)norm_pool_data, CIEDPC_MSG_TYPE_NORM,
-		CIEDPC_MSG_NORM_QUEUE_SIZE, CIEDPC_MSG_NORM_DATA_MAX, CIEDPC_MSG_NORM_DATA_MAX
 	);
 
 	// Khởi tạo ALLOC Pool
@@ -226,9 +189,6 @@ void ciedpc_msg_free(ciedpc_msg_t* msg) {
 		case CIEDPC_MSG_TYPE_BLANK:
 			header = &g_blank_pool_ctrl;
 			break;
-		case CIEDPC_MSG_TYPE_NORM:
-			header = &g_norm_pool_ctrl;
-			break;
 		case CIEDPC_MSG_TYPE_ALLOC:
 			header = &g_alloc_pool_ctrl;
 			break;
@@ -253,12 +213,6 @@ void ciedpc_msg_ref_dec(ciedpc_msg_t* msg) {
 	msg->ref_count--;
 	if (msg->ref_count == 0) {
 		ciedpc_msg_free(msg);
-	}
-}
-
-void ciedpc_msg_set_data(ciedpc_msg_t* msg, const ui8* data, ui16 size) {
-	if (msg->data != NULL && size > 0) {
-		memcpy(msg->data, data, size);
 	}
 }
 
@@ -324,7 +278,7 @@ void internal_ciedpc_msg_pool_init(
 				 * @attention Lưu ý rằng [0][0-7], [1][8-15], ... Đây chính là nguyên lý trải phẳng của mảng 2 chiều thành mảng 1 chiều, 
 				 * 						giúp việc quản lý bộ nhớ trở nên đơn giản và hiệu quả hơn.
 				 */
-				pool[index].data = (ui16*)(data_mem + (index * data_size));
+				pool[index].data = (ui32*)(data_mem + (index * data_size));
 
 				// Xóa sạch vùng dữ liệu
 				memset(pool[index].data, 0, data_size);
@@ -400,15 +354,13 @@ void internal_ciedpc_msg_pool_push(ciedpc_msg_pool_header_t* header, ciedpc_msg_
  * 
  * @param size Kích thước dữ liệu yêu cầu cho tin nhắn
  * @return ciedpc_msg_pool_header_t* Con trỏ đến Pool tin nhắn phù hợp nhất hoặc NULL nếu không có Pool nào phù hợp
- * @attention Pool EXTAL không được xem xét trong hàm này vì nó được thiết kế để đảm bảo signal từ ngoài vào core được
+ * @attention Pool EXTAL và ISR không được xem xét trong hàm này vì nó được thiết kế để đảm bảo signal từ ngoài vào core được
  * 						xử lý trước khi vào hàng đợi tin nhắn chính thức của task, 
  * 						do đó nó không cần phải tuân theo quy tắc lựa chọn Pool dựa trên kích thước dữ liệu như các Pool khác.
  */
 ciedpc_msg_pool_header_t* internal_ciedpc_msg_find_best_pool(ui16 size) {
 	if (size == 0) {
 		return &g_blank_pool_ctrl; // Pool Blank
-	} else if (size <= CIEDPC_MSG_NORM_DATA_MAX) {
-		return &g_norm_pool_ctrl; // Pool Norm
 	} else if (size <= CIEDPC_MSG_ALLOC_DATA_MAX) {
 		return &g_alloc_pool_ctrl; // Pool Alloc
 	} else {
@@ -455,7 +407,6 @@ bool ciedpc_msg_is_valid_ptr(ciedpc_msg_t* msg) {
 
 	// Kiểm tra xem con trỏ tin nhắn có thuộc về bất kỳ Pool nào không
 	if ((msg >= &blank_pool[0] && msg < &blank_pool[CIEDPC_MSG_BLANK_QUEUE_SIZE]) ||
-			(msg >= &norm_pool[0] && msg < &norm_pool[CIEDPC_MSG_NORM_QUEUE_SIZE]) ||
 			(msg >= &alloc_pool[0] && msg < &alloc_pool[CIEDPC_MSG_ALLOC_QUEUE_SIZE]) ||
 			(msg >= &extal_pool[0] && msg < &extal_pool[CIEDPC_MSG_EXTAL_QUEUE_SIZE])) {
 		return true; // Con trỏ tin nhắn hợp lệ

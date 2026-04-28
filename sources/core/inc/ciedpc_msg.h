@@ -59,7 +59,7 @@
 			ui16  ref_count;     /* Số lượng tham chiếu (dùng cho broadcast) */
 
 			/* Payload dữ liệu */
-			ui16* data;          /* Con trỏ đến vùng dữ liệu */
+			ui32* data;          /* Con trỏ đến vùng dữ liệu */
 
 			/* Metadata hỗ trợ interface */
 			struct {
@@ -82,6 +82,31 @@
 			ui16 des_task_id; 	
 			ui16 sig; 					
 		} ciedpc_msg_isr_t;
+
+		/**
+		 * @brief Định nghĩa các macro tiện ích để thao tác với dữ liệu của tin nhắn
+		 * @param msg: Con trỏ đến tin nhắn cần thao tác
+		 * @param val: Giá trị cần gán vào dữ liệu của tin nhắn
+		 * @param type: Kiểu dữ liệu của giá trị cần gán, giúp đảm bảo việc gán dữ liệu đúng cách và an toàn
+		 */
+		#define ciedpc_msg_set_data_val(msg, val, type) \
+		do { \
+			if ((msg)->data != NULL) { \
+				*(type*)((msg)->data) = (val); \
+			} \
+		} while(0)
+
+		/**
+		 * @brief Định nghĩa macro tiện ích để gán tham chiếu vào dữ liệu của tin nhắn
+		 * @param msg: Con trỏ đến tin nhắn cần thao tác
+		 * @param ref: Tham chiếu cần gán vào dữ liệu của tin nhắn
+		 */
+		#define ciedpc_msg_set_data_ref(msg, ref) \
+		do { \
+			if ((msg)->data != NULL) { \
+				*(void**)((msg)->data) = (ref); \
+			} \
+		} while(0)
 
 		/**
 		 * @brief Hàm khởi tạo Queue tin nhắn
@@ -121,7 +146,7 @@
 		 * @param data: Con trỏ đến dữ liệu cần sao chép
 		 * @param size: Kích thước dữ liệu cần sao chép
 		 */
-		void ciedpc_msg_set_data(ciedpc_msg_t* msg, const ui8* data, ui16 size);
+		void ciedpc_msg_set_data(ciedpc_msg_t* msg, const ui8* data, ui8 size);
 
 		/**
 		 * @brief Hàm nội bộ để khởi tạo Pool tin nhắn
