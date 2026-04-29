@@ -54,13 +54,10 @@ void task_a_handler(ciedpc_msg_t* msg) {
     break;
   case SIG_TSK_B_TO_A:
     printf("[Task A] Received message from Task B\n");
-    char* received_str = *(char**)(msg->data);
-    printf("[Task A] Data from Task B: %c\n", received_str); // Truy cập dữ liệu thông qua con trỏ địa chỉ
-    
-    for (int i = 0; i < (int)strlen(received_str); i++) { // Giả sử dữ liệu là một chuỗi ký tự, in ra từng ký tự một
-      printf("%c", received_str[i]);
-    }
-    printf("\n[Task A] Sending STOP signal to USR...\n");
+    uintptr_t received_addr = (uintptr_t)(*(char**)(msg->data));
+    char* final_str = *(char**)received_addr;
+    printf("[Task A] Content: %s\n", final_str);
+    printf("[Task A] Sending STOP signal to USR...\n");
     ciedpc_msg_t* stop_msg = ciedpc_msg_alloc(CIEDPC_TASK_NORM_USR_ID, SIG_USR_STOP, 0);
     ciedpc_task_post_msg(CIEDPC_TASK_NORM_USR_ID, stop_msg);
     printf("[Task A] Sent STOP signal to USR. Exiting...\n");
@@ -74,12 +71,10 @@ void task_b_handler(ciedpc_msg_t* msg) {
   switch (msg->sig) {
   case SIG_TSK_A_TO_B:
     printf("[Task B] Received message from Task A.\n");
-    char* received_str = *(char**)(msg->data);
-    printf("[Task B] Data from Task A: %c\n", received_str); // Truy cập dữ liệu thông qua con trỏ địa chỉ
-    for (int i = 0; i < (int)strlen(received_str); i++) { // Giả sử dữ liệu là một chuỗi ký tự, in ra từng ký tự một
-      printf("%c", received_str[i]);
-    }
-    printf("\n[Task B] Sending message back to Task A...\n");
+    uintptr_t received_addr = (uintptr_t)(*(char**)(msg->data));
+    char* final_str = *(char**)received_addr;
+    printf("[Task B] Content: %s\n", final_str);
+    printf("[Task B] Sending message back to Task A...\n");
     ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(TASK_NORM_A_ID, SIG_TSK_B_TO_A, sizeof(char*));
     ciedpc_msg_set_data_ref(msg_to_a, (char*)&data_b_to_a);
     /**
