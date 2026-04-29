@@ -28,65 +28,181 @@ sta ciedpc_msg_t* b_q_mem[8];
 sta const char* data_a_to_b = "Hello from Task A!";
 sta const char* data_b_to_a = "Hello from Task B!";
 
+sta ciedpc_fsm_t fsm_usr; // FSM cho task USR
+sta ciedpc_fsm_t fsm_a; // FSM cho task A
+sta ciedpc_fsm_t fsm_b; // FSM cho task B
+
+sta void usr_state_idle(ciedpc_msg_t* msg);
+sta void usr_state_active(ciedpc_msg_t* msg);
+sta void task_a_state_idle(ciedpc_msg_t* msg);
+sta void task_a_state_active(ciedpc_msg_t* msg);
+sta void task_b_state_idle(ciedpc_msg_t* msg);
+sta void task_b_state_active(ciedpc_msg_t* msg);
+
+/**
+ * @brief Định nghĩa các trạng thái FSM
+ */
+void usr_state_idle(ciedpc_msg_t* msg) {
+  switch (msg->sig) {
+    case CIEDPC_FSM_SIG_INIT:
+      printf("[USR] Initializing FSM. Entering IDLE state...\n");
+      break;
+    case CIEDPC_FSM_SIG_EXIT:
+      printf("[USR] Exiting IDLE state...\n");
+      break;
+    case CIEDPC_FSM_SIG_ENTRY:
+      printf("[USR] Entering IDLE state. Waiting for START signal...\n");
+      break;
+    case SIG_USR_START:
+      printf("[USR] Received START signal. Transitioning to ACTIVE state...\n");
+      ciedpc_fsm_go_next(&fsm_usr, usr_state_active);
+      break;
+    default:
+      printf("[USR] Encountered unexpected signal in IDLE state: %x\n", msg->sig);
+      break;
+  }
+}
+
+void usr_state_active(ciedpc_msg_t* msg) {
+  switch (msg->sig) {
+    case CIEDPC_FSM_SIG_EXIT:
+      printf("[USR] Exiting ACTIVE state...\n");
+      break;
+    case CIEDPC_FSM_SIG_ENTRY:
+      printf("[USR] Entering ACTIVE state. System is now active.\n");
+      // Thực hiện gửi SIG_USR_START tới task A để kích hoạt chuỗi hành động
+      ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(TASK_NORM_A_ID, SIG_USR_START, 0);
+      ciedpc_task_post_msg(TASK_NORM_A_ID, msg_to_a);
+      printf("[USR] Sent START signal to Task A. Waiting for further signals...\n");
+      break;
+    case SIG_USR_STOP:
+      printf("[USR] Received STOP signal. Transitioning to IDLE state...\n");
+      ciedpc_fsm_go_next(&fsm_usr, usr_state_idle); 
+      /**
+       * @brief Có thể dùng ciedpc_fsm_go_back(&fsm_usr) để quay lại trạng thái trước đó, 
+       *        nhưng ở context này thì go_next sẽ trực quan hơn 
+       *        để thể hiện rõ ràng việc chuyển đổi trạng thái từ ACTIVE về IDLE 
+       *        khi nhận được tín hiệu STOP.
+       */
+      break;
+    default:
+      printf("[USR] Encountered unexpected signal in ACTIVE state: %x\n", msg->sig);
+      break;
+  }
+}
+
+void task_a_state_idle(ciedpc_msg_t* msg) {
+  switch (msg->sig) {
+    case CIEDPC_FSM_SIG_EXIT:
+      printf("[TSKA] Exiting IDLE state...\n");
+      break;
+    case CIEDPC_FSM_SIG_ENTRY:
+      printf("[TSKA] Entering IDLE state. Waiting for SIG_USR_START signal...\n");
+      break;
+    case SIG_USR_START:
+      printf("[TSKA] Received START signal. Transitioning to ACTIVE state...\n");
+      ciedpc_fsm_go_next(&fsm_a, task_a_state_active);
+      break;
+    default:
+      printf("[TSKA] Encountered unexpected signal in IDLE state: %x\n", msg->sig);
+      break;
+  }
+}
+
+void task_a_state_active(ciedpc_msg_t* msg) {
+  switch (msg->sig) {
+    case CIEDPC_FSM_SIG_EXIT:
+      printf("[TSKA] Exiting ACTIVE state...\n");
+      break;
+    case CIEDPC_FSM_SIG_ENTRY:
+      printf("[TSKA] Entering ACTIVE state. Preparing to send message...\n");
+      // Thực hiện gửi tin nhắn từ Task A sang Task B
+      ciedpc_msg_t* msg_to_b = ciedpc_msg_alloc(TASK_NORM_B_ID, SIG_TSK_A_TO_B, sizeof(char*));
+      ciedpc_msg_set_data_ref(msg_to_b, (char*)&data_a_to_b); // Truyền địa chỉ của chuỗi dữ liệu
+      ciedpc_task_post_msg(TASK_NORM_B_ID, msg_to_b);
+      printf("[TSKA] Message sent to Task B. Waiting for response...\n");
+      break;
+    case SIG_TSK_B_TO_A:
+      printf("[TSKA] Received message from Task B. Transitioning to IDLE state...\n");
+      // Thực hiện in nội dung tin nhắn nhận được từ Task B
+      uintptr_t received_addr = (uintptr_t)(*(char**)(msg->data));
+      char* final_str = *(char**)received_addr;
+      printf("[TSKA] Content: %s\n", final_str);
+      ciedpc_fsm_go_next(&fsm_a, task_a_state_idle);
+      /**
+       * @brief Ghi chú tương tự như ở trạng thái ACTIVE của task USR,
+       *        việc sử dụng go_next sẽ giúp thể hiện rõ ràng hơn việc chuyển đổi trạng thái 
+       *        từ ACTIVE về IDLE sau khi nhận được phản hồi từ Task B.
+       */
+      break;
+    default:
+      printf("[TSKA] Encountered unexpected signal in ACTIVE state: %x\n", msg->sig);
+      break;
+  }
+}
+
+void task_b_state_idle(ciedpc_msg_t* msg) {
+  switch (msg->sig) {
+    case CIEDPC_FSM_SIG_EXIT:
+      printf("[TSKB] Exiting IDLE state...\n");
+      break;
+    case CIEDPC_FSM_SIG_ENTRY:
+      printf("[TSKB] Entering IDLE state. Waiting for SIG_TSK_A_TO_B signal...\n");
+      break;
+    case SIG_TSK_A_TO_B:
+      printf("[TSKB] Received message from Task A. Transitioning to ACTIVE state...\n");
+      // Thực hiện in nội dung tin nhắn nhận được từ Task A
+      uintptr_t received_addr = (uintptr_t)(*(char**)(msg->data));
+      char* final_str = *(char**)received_addr;
+      printf("[TSKB] Content: %s\n", final_str);
+      ciedpc_fsm_go_next(&fsm_b, task_b_state_active);
+      break;
+    default:
+      printf("[TSKB] Encountered unexpected signal in IDLE state: %x\n", msg->sig);
+      break;
+  }
+}
+
+void task_b_state_active(ciedpc_msg_t* msg) {
+  switch (msg->sig) {
+    case CIEDPC_FSM_SIG_EXIT:
+      printf("[TSKB] Exiting ACTIVE state...\n");
+      break;
+    case CIEDPC_FSM_SIG_ENTRY:
+      printf("[TSKB] Entering ACTIVE state. Preparing to send message back to Task A...\n");
+      // Thực hiện gửi tin nhắn phản hồi từ Task B về Task A
+      ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(TASK_NORM_A_ID, SIG_TSK_B_TO_A, sizeof(char*));
+      ciedpc_msg_set_data_ref(msg_to_a, (char*)&data_b_to_a);
+      ciedpc_task_post_msg(TASK_NORM_A_ID, msg_to_a);
+      printf("[TSKB] Message sent back to Task A. Return to IDLE state...\n");
+      ciedpc_fsm_go_next(&fsm_b, task_b_state_idle);
+       /**
+       * @brief Sau khi gửi phản hồi về Task A, Task B sẽ quay lại trạng thái IDLE 
+       *        để sẵn sàng nhận các tin nhắn tiếp theo từ Task A,
+       *        việc sử dụng go_next sẽ giúp thể hiện rõ ràng hơn việc chuyển đổi trạng thái 
+       *        từ ACTIVE về IDLE sau khi hoàn thành nhiệm vụ gửi phản hồi.
+       */
+      break;
+    default:
+      printf("[TSKB] Encountered unexpected signal in ACTIVE state: %x\n", msg->sig);
+      break;
+  }
+}
+
 /**
  * @brief Định nghĩa handler cho task USR, task A và task B
  */
 
 void task_usr_handler(ciedpc_msg_t* msg) {
-  if (msg->sig == SIG_USR_START) {
-    printf("[USR] Received START signal. Sending message to Task A...\n");
-    ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(TASK_NORM_A_ID, SIG_USR_START, 0);
-    ciedpc_task_post_msg(TASK_NORM_A_ID, msg_to_a);
-  } else if (msg->sig == SIG_USR_STOP) {
-    printf("[USR] Received STOP signal. Stopping the system...\n");
-    // Thực hiện các hành động cần thiết để dừng hệ thống, có thể là gửi tín hiệu đến các tác vụ khác để dừng chúng
-  }
+  ciedpc_fsm_dispatch(&fsm_usr, msg);
 }
 
 void task_a_handler(ciedpc_msg_t* msg) {
-  switch (msg->sig) {
-  case SIG_USR_START:
-    printf("[Task A] Received START signal from USR. Sending message to Task B...\n");
-    ciedpc_msg_t* msg_to_b = ciedpc_msg_alloc(TASK_NORM_B_ID, SIG_TSK_A_TO_B, sizeof(char*));
-    ciedpc_msg_set_data_ref(msg_to_b, (char*)&data_a_to_b); // Truyền địa chỉ của chuỗi dữ liệu
-    ciedpc_task_post_msg(TASK_NORM_B_ID, msg_to_b);
-    printf("[Task A] Message sent to Task B. Waiting for response...\n");
-    break;
-  case SIG_TSK_B_TO_A:
-    printf("[Task A] Received message from Task B\n");
-    uintptr_t received_addr = (uintptr_t)(*(char**)(msg->data));
-    char* final_str = *(char**)received_addr;
-    printf("[Task A] Content: %s\n", final_str);
-    printf("[Task A] Sending STOP signal to USR...\n");
-    ciedpc_msg_t* stop_msg = ciedpc_msg_alloc(CIEDPC_TASK_NORM_USR_ID, SIG_USR_STOP, 0);
-    ciedpc_task_post_msg(CIEDPC_TASK_NORM_USR_ID, stop_msg);
-    printf("[Task A] Sent STOP signal to USR. Exiting...\n");
-    break;
-  default:
-    break;
-  }
+  ciedpc_fsm_dispatch(&fsm_a, msg);
 }
 
 void task_b_handler(ciedpc_msg_t* msg) {
-  switch (msg->sig) {
-  case SIG_TSK_A_TO_B:
-    printf("[Task B] Received message from Task A.\n");
-    uintptr_t received_addr = (uintptr_t)(*(char**)(msg->data));
-    char* final_str = *(char**)received_addr;
-    printf("[Task B] Content: %s\n", final_str);
-    printf("[Task B] Sending message back to Task A...\n");
-    ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(TASK_NORM_A_ID, SIG_TSK_B_TO_A, sizeof(char*));
-    ciedpc_msg_set_data_ref(msg_to_a, (char*)&data_b_to_a);
-    /**
-     * @brief Thử nghiệm việc truyền địa chỉ làm dữ liệu của tin nhắn, 
-     *        Giảm tải bộ nhớ bằng cách không sao chép dữ liệu mà chỉ truyền địa chỉ của biến chứa dữ liệu,
-     */
-    ciedpc_task_post_msg(TASK_NORM_A_ID, msg_to_a);
-    printf("[Task B] Message sent back to Task A. Waiting for next message...\n");
-    break;
-  default:
-    break;
-  }
+  ciedpc_fsm_dispatch(&fsm_b, msg);
 }
 
 /**
@@ -127,6 +243,10 @@ int main() {
 
   pthread_t tick_tid;
   pthread_create(&tick_tid, NULL, linux_tick_thread, NULL);
+
+  ciedpc_fsm_init(&fsm_usr, usr_state_idle);
+  ciedpc_fsm_init(&fsm_a, task_a_state_idle);
+  ciedpc_fsm_init(&fsm_b, task_b_state_idle);
 
   ciedpc_msg_t* start_msg = ciedpc_msg_alloc(CIEDPC_TASK_NORM_USR_ID, SIG_USR_START, 0);
   ciedpc_task_post_msg(CIEDPC_TASK_NORM_USR_ID, start_msg);

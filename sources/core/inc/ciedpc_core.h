@@ -99,9 +99,10 @@
 		#define CIEDPC_FSM_SIG_ENTRY    (0xB0u)
 		#define CIEDPC_FSM_SIG_EXIT     (0xB1u)
 		#define CIEDPC_FSM_SIG_INIT     (0xB2u)
+    #define CIEDPC_FSM_SIG_LOOP     (0xB3u) // Tín hiệu để xử lý trạng thái tự trỏ chính nó.
     #define CIEDPC_FSM_SIG_MIN      (0xB0u) // ID thấp nhất
     #define CIEDPC_FSM_SIG_MAX      (0xBFu) // ID cao nhất
-    #define CIEDPC_FSM_SIG_OFFSET   (0x03u) // Offset để tránh trùng với các tín hiệu khác
+    #define CIEDPC_FSM_SIG_OFFSET   (0x04u) // Offset để tránh trùng với các tín hiệu khác
 
     /**
 		 * @brief Khai báo dải tín hiệu TSM
