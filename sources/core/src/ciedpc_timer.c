@@ -214,3 +214,8 @@ void ciedpc_timer_tick(void) {
 		}
 	}
 }
+
+void ciedpc_timer_get_stats(ui8* active, ui8* max_capacity) {
+	*active = timer_ctrl.active_count;
+	*max_capacity = CIEDPC_TIMER_MAX_NODES;
+}

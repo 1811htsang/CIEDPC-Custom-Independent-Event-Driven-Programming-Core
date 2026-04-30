@@ -149,6 +149,14 @@
 		 */
 		bool ciedpc_task_is_ready(task_id_t task_id);
 
+		/**
+		 * @brief Lấy thông tin hàng đợi của một Task
+		 * @param tid ID của Task cần lấy thông tin
+		 * @param used Con trỏ đến biến sẽ nhận số lượng tin nhắn đang có trong hàng đợi của Task
+		 * @param max Con trỏ đến biến sẽ nhận kích thước tối đa của hàng đợi của Task
+		 */
+		void ciedpc_task_get_queue_stats(task_id_t tid, ui8* used, ui8* max);
+
 	#ifdef __cplusplus
 	}
 	#endif

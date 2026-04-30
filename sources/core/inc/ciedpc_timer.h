@@ -91,6 +91,13 @@
 		 */
 		void ciedpc_timer_tick(void);
 
+		/**
+		 * @brief Lấy thông tin sử dụng của Timer Pool
+		 * @param active Số lượng timer đang hoạt động
+		 * @param max_capacity Số lượng timer tối đa có thể hoạt động cùng lúc
+		 */
+		void ciedpc_timer_get_stats(ui8* active, ui8* max_capacity);
+
 	#ifdef __cplusplus
 	}
 	#endif

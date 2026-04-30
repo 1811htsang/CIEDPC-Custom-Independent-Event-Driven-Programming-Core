@@ -145,6 +145,14 @@ bool ciedpc_task_is_ready(task_id_t task_id) {
   return (g_task_norm_ready & (1 << (pri - CIEDPC_TASK_PRI_LEVEL_0))) != 0; // Trả về true nếu tác vụ có mức độ ưu tiên tương ứng đang ở trạng thái sẵn sàng
 }
 
+void ciedpc_task_get_queue_stats(task_id_t tid, ui8* used, ui8* max) {
+  task_norm_t* task = internal_get_task_by_id(tid);
+  if (task) {
+    *used = task->msg_queue.fill_size;
+    *max = task->msg_queue.buffer_size;
+  }
+}
+
 /**
  * @brief Hàm nội bộ để đưa một tin nhắn vào hàng đợi của một tác vụ cụ thể
  * 
