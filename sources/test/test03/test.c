@@ -14,6 +14,7 @@
 #include "ciedpc_task.h"
 #include "ciedpc_msg.h"
 #include "ciedpc_timer.h"
+#include "ciedpc_fsm.h"
 
 /**
  * @brief Khai báo static message queue cho task USR (entry point), task A và task B
@@ -93,6 +94,9 @@ void usr_state_active(ciedpc_msg_t* msg) {
 
 void task_a_state_idle(ciedpc_msg_t* msg) {
   switch (msg->sig) {
+    case CIEDPC_FSM_SIG_INIT:
+      printf("[TSKA] Initializing FSM. Entering IDLE state...\n");
+      break;
     case CIEDPC_FSM_SIG_EXIT:
       printf("[TSKA] Exiting IDLE state...\n");
       break;
@@ -143,11 +147,14 @@ void task_a_state_active(ciedpc_msg_t* msg) {
 
 void task_b_state_idle(ciedpc_msg_t* msg) {
   switch (msg->sig) {
+    case CIEDPC_FSM_SIG_INIT:
+      printf("[TSKB] Initializing FSM. Entering IDLE state...\n");
+      break;
     case CIEDPC_FSM_SIG_EXIT:
       printf("[TSKB] Exiting IDLE state...\n");
       break;
     case CIEDPC_FSM_SIG_ENTRY:
-      printf("[TSKB] Entering IDLE state. Waiting for SIG_TSK_A_TO_B signal...\n");
+      printf("[TSKB] Entering IDLE state...\n");
       break;
     case SIG_TSK_A_TO_B:
       printf("[TSKB] Received message from Task A. Transitioning to ACTIVE state...\n");

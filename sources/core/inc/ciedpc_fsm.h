@@ -21,7 +21,6 @@
 		 */
 		#include <stdint.h>
 		#include "ciedpc_core.h"
-		#include "ciedpc_msg.h"
 
 		/**
 		 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống CIEDPC
@@ -64,9 +63,8 @@
 			(me)->state = (state_handler)(init_func); \
 			(me)->history_index = 0; \
 			memset((me)->history, 0, sizeof((me)->history)); \
-			ciedpc_msg_t m; \
-			ciedpc_msg_alloc(&m, 0, CIEDPC_FSM_SIG_INIT, 0); /* Giả định có hàm tạo msg chuẩn */ \
-			(init_func)(&m); /* Gửi tín hiệu INIT đến trạng thái khởi tạo của FSM */ \
+			ciedpc_msg_t* m = ciedpc_msg_alloc(0, CIEDPC_FSM_SIG_INIT, 0); \
+			(init_func)(m); /* Gửi tín hiệu INIT đến trạng thái khởi tạo của FSM */ \
 		} while(0)
 
 		/**

@@ -6,6 +6,7 @@ set(PLATFORM "LINUX" CACHE STRING "Target platform: LINUX, STM32, ESP32")
 
 # 2. Danh sách file nguồn LÕI (Không đổi dù sang nền tảng nào)
 set(CORE_SOURCES
+  ../../core/src/ciedpc_fsm.c
   ../../core/src/ciedpc_msg.c
   ../../core/src/ciedpc_task.c
   ../../core/src/ciedpc_timer.c
