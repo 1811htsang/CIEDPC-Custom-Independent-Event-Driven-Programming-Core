@@ -132,6 +132,11 @@ int main() {
   ciedpc_task_post_msg(CIEDPC_TASK_NORM_USR_ID, start_msg);
 
   while (1) {
+    /**
+     * @brief Nếu sử dụng ở STM32 thì tín hiệu tick sẽ được gọi trong loop chính của firmware, nhưng trong môi trường Linux, chúng ta cần một luồng riêng biệt để mô phỏng hoạt động này
+     * 
+     */
+
     ciedpc_task_scheduler();
     usleep(100); // Sleep để tránh CPU hogging
   }

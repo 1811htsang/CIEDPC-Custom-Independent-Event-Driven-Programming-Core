@@ -59,6 +59,7 @@
 		#define ext extern
 		#define inl inline
 		#define stinl static inline
+    #define vol volatile
 
     /**
      * @brief Định nghĩa các attribute đối với compiler
