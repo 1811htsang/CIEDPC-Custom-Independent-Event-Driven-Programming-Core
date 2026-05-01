@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include "ciedpc_core.h"
 #include "ciedpc_msg.h"
+#include "pal_memrp.h"
 #include "fifo.h"
 
 /**
@@ -50,7 +51,7 @@
  * @brief Khai báo cấu trúc quản lý Pool tin nhắn
  * @param free_list Con trỏ đến đầu của Pool tin nhắn
  * @param used_count Số lượng tin nhắn đang được sử dụng trong Pool
- * @param max_used Số lượng tin nhắn tối đa đã từng được sử dụng trong
+ * @param max_used Số lượng tin nhắn tối đa đã từng được sử dụng trong Pool
  */
 typedef struct ciedpc_msg_pool_header_t {
 	ciedpc_msg_t* free_list;
@@ -441,4 +442,47 @@ RETR_STAT internal_ciedpc_msg_enqueue_isr_sig(task_id_t tid, ui16 sig) {
 	
 	pal_exit_critical();
 	return result; // Hàng đợi ISR đầy
+}
+
+void internal_ciedpc_msg_pool_get_info(ciedpc_msg_type_t pool_id, pal_memrp_info_t* info) {
+	if (!info) return;
+
+	switch (pool_id) {
+		case CIEDPC_MSG_TYPE_BLANK:
+			info->target = (void*)blank_pool;
+			info->name = "BLANK";
+			info->type = CIEDPC_MSG_TYPE_BLANK;
+			info->used = g_blank_pool_ctrl.used_count;
+			info->max_used = g_blank_pool_ctrl.max_used;
+			info->total = CIEDPC_MSG_BLANK_QUEUE_SIZE;
+			break;
+		case CIEDPC_MSG_TYPE_ALLOC:
+			info->target = (void*)alloc_pool;
+			info->name = "ALLOC";
+			info->type = CIEDPC_MSG_TYPE_ALLOC;
+			info->used = g_alloc_pool_ctrl.used_count;
+			info->max_used = g_alloc_pool_ctrl.max_used;
+			info->total = CIEDPC_MSG_ALLOC_QUEUE_SIZE;
+			break;
+		case CIEDPC_MSG_TYPE_EXTAL:
+			info->target = (void*)extal_pool;
+			info->name = "EXTAL";
+			info->type = CIEDPC_MSG_TYPE_EXTAL;
+			info->used = g_extal_pool_ctrl.used_count;
+			info->max_used = g_extal_pool_ctrl.max_used;
+			info->total = CIEDPC_MSG_EXTAL_QUEUE_SIZE;
+			break;
+		case CIEDPC_MSG_TYPE_ISR:
+			info->target = (void*)isr_pool_buffer;
+			info->name = "ISR";
+			info->type = CIEDPC_MSG_TYPE_ISR; // ISR Pool không có kiểu tin nhắn cụ thể, có thể coi là BLANK hoặc định nghĩa một kiểu mới nếu cần
+			// FIFO không cung cấp trực tiếp số lượng phần tử đang sử dụng, có thể cần theo dõi riêng nếu cần
+			info->used = 0; // Không có thông tin cụ thể về số lượng phần tử đang sử dụng trong FIFO
+			info->max_used = 0; // Không có thông tin cụ thể về số lượng phần tử tối đa đã từng được sử dụng trong FIFO
+			info->total = CIEDPC_MSG_ISR_QUEUE_SIZE; // Tổng số phần tử có thể chứa trong FIFO
+			break;
+		default:
+			printf("Invalid pool ID: %d\n", pool_id);
+			break;
+	}
 }

@@ -15,18 +15,13 @@
 #include "fifo.h"
 
 void pal_memrp_report(pal_memrp_info_t* info) {
-  if (info == NULL || info->target == NULL) {
+  if (info == NULL) {
     return; // Nếu thông tin không hợp lệ, không thực hiện báo cáo
   }
 
-  // Tùy thuộc vào loại target, chúng ta sẽ lấy thông tin bộ nhớ khác nhau
-  if (info->target == timer_ctrl.free_list || info->target == timer_ctrl.head) {
-    // Báo cáo thông tin bộ nhớ của Timer Pool
-    info->used = timer_ctrl.active_count;
-    info->max_used = CIEDPC_TIMER_MAX_NODES - 1; // Giả sử max_used là số lượng nút đã từng được sử dụng trong Pool
-    info->total = CIEDPC_TIMER_MAX_NODES;
-  } else {
-    // Có thể thêm các loại target khác như Task Queue, Alloc Pool, v.v. ở đây
-    // Ví dụ: nếu target là một hàng đợi tin nhắn của một tác vụ cụ thể, chúng ta có thể lấy thông tin từ đó
-  }
+  internal_ciedpc_msg_pool_get_info(info->type, info);
+
+  // Sau khi điền đầy đủ thông tin vào cấu trúc info, in báo cáo ra console hoặc gửi đến hệ thống giám sát
+  printf("[MEMRP] Name: %s, Used: %d, Max Used: %d, Total: %d\n",
+         info->name, info->used, info->max_used, info->total);
 }

@@ -14,6 +14,7 @@
 #include "ciedpc_task.h"
 #include "ciedpc_msg.h"
 #include "ciedpc_timer.h"
+#include "pal_memrp.h"
 
 /**
  * @brief Khai báo static message queue cho task USR (entry point), task A và task B
@@ -83,6 +84,7 @@ void task_b_handler(ciedpc_msg_t* msg) {
      */
     ciedpc_task_post_msg(TASK_NORM_A_ID, msg_to_a);
     printf("[Task B] Message sent back to Task A. Waiting for next message...\n");
+    pal_memrp_report(&(pal_memrp_info_t){ .type = CIEDPC_MSG_TYPE_ALLOC }); // Báo cáo thông tin bộ nhớ sau khi gửi tin nhắn
     break;
   default:
     break;

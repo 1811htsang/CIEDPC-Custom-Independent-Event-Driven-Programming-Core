@@ -21,8 +21,11 @@
 		 */
 		#include <stdint.h>
 		#include <stdlib.h>
+		#include <stdio.h>
 		#include "ciedpc_core.h"
 		#include "ciedpc_task.h"
+
+		typedef struct pal_memrp_info_t pal_memrp_info_t; // Forward declaration để tránh include vòng
 
 		/**
 		 * @brief Định nghĩa các loại Pool tin nhắn (Nội bộ Core sử dụng)
@@ -31,7 +34,8 @@
 				CIEDPC_MSG_TYPE_BLANK = 0,    /* Không data */
 				CIEDPC_MSG_TYPE_NORM,      		/* Data kích thước cố định (Pool) */
 				CIEDPC_MSG_TYPE_ALLOC,     		/* Data lớn (Heap/Large Pool) */
-				CIEDPC_MSG_TYPE_EXTAL    			/* Tin nhắn từ interface */
+				CIEDPC_MSG_TYPE_EXTAL,    			/* Tin nhắn từ interface */
+				CIEDPC_MSG_TYPE_ISR   			/* Tin nhắn từ ngữ cảnh ISR */
 		} ciedpc_msg_type_t;
 
 		/**
@@ -163,6 +167,17 @@
 		 * 
 		 */
 		void ciedpc_msg_drain_isr_pool(void);
+
+		/**
+		 * @brief Lấy thông tin bộ nhớ của một Pool tin nhắn cụ thể để báo cáo cho PAL Memory Reporter
+		 * @param pool_id ID của Pool tin nhắn cần lấy thông tin, có thể là CIEDPC_MSG_TYPE_BLANK, CIEDPC_MSG_TYPE_ALLOC hoặc CIEDPC_MSG_TYPE_EXTAL
+		 * @param info Con trỏ đến cấu trúc pal_memrp_info_t để lưu trữ thông tin bộ nhớ của Pool tin nhắn, bao gồm target, used, max_used và total
+		 * @attention Hàm này được thiết kế tách biệt dành cho việc báo cáo thông tin bộ nhớ của các Pool tin nhắn cho PAL Memory Reporter, 
+		 *            giúp hệ thống CIEDPC có thể theo dõi và quản lý bộ nhớ một cách hiệu quả hơn.
+		 *            Ví dụ khi pool_id là CIEDPC_MSG_TYPE_ALLOC thì info->target sẽ trỏ đến alloc_pool, info->used sẽ là số lượng tin nhắn đang được sử dụng trong alloc_pool,
+		 *            info->max_used sẽ là số lượng tin nhắn tối đa đã từng được sử dụng trong alloc_pool, info->total sẽ là tổng số tin nhắn có thể chứa trong alloc_pool.
+		 */
+		void internal_ciedpc_msg_pool_get_info(ciedpc_msg_type_t pool_id, pal_memrp_info_t* info);
 
 	#ifdef __cplusplus
 	}

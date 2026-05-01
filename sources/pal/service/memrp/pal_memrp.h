@@ -16,32 +16,19 @@
   #include "ciedpc_msg.h"
 
   /**
-   * @brief Định nghĩa các loại đối tượng bộ nhớ trong hệ thống
-   * @param MEMRP_TYPE_MSG_POOL Đối tượng là Pool quản lý tin nhắn của các tác vụ
-   * @param MEMRP_TYPE_TASK_QUEUE Đối tượng là Hàng đợi của Task (FIFO)
-   * @param MEMRP_TYPE_TIMER_POOL Đối tượng là Pool quản lý Timer
-   * @param MEMRP_TYPE_ISR_FIFO Đối tượng là Hàng đợi tín hiệu ngắt
-   * @param MEMRP_TYPE_UNKNOWN Loại đối tượng không xác định
-   */
-  typedef enum pal_memrp_type_t {
-    MEMRP_TYPE_MSG_POOL = 0,
-    MEMRP_TYPE_TASK_QUEUE,
-    MEMRP_TYPE_TIMER_POOL,
-    MEMRP_TYPE_ISR_FIFO,
-    MEMRP_TYPE_UNKNOWN
-  } pal_memrp_type_t;
-
-  /**
    * @brief Cấu trúc thông tin báo cáo bộ nhớ cho một target cụ thể
    * @attention `target` có thể là bất kỳ loại Pool nào (Blank, Alloc, Extal, Timer, ISR, Task Queue, v.v.), 
    * @param target Con trỏ đến mảng chứa các elements như pool, task message queue, timer pool, 
    *               sử dụng void* để có thể áp dụng cho bất kỳ loại Pool nào (Blank, Alloc, Extal, Timer, ISR, Task Queue, v.v.)
+   * @param type Loại đối tượng bộ nhớ
    * @param used Số lượng elements đang được sử dụng trong Pool
    * @param max_used Số lượng elements tối đa đã từng được sử dụng trong Pool
    * @param total Tổng số elements có thể chứa trong Pool
    */
   typedef struct pal_memrp_info_t {
     void* target;
+    const char* name; // Tên của target để dễ dàng nhận biết trong báo cáo, có thể là "Blank Pool", "Alloc Pool", "Extal Pool", "Timer Pool", "ISR Queue", "Task A Queue", v.v.
+    ciedpc_msg_type_t type;
     ui8 used;
     ui8 max_used;
     ui8 total;
