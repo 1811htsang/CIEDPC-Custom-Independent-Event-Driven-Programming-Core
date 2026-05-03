@@ -108,10 +108,10 @@ void task_poll_memrp_handler() {
  *            trong khi TASK_A và TASK_B sẽ thực hiện các chức năng chính của bài test
  */
 task_norm_t app_task_table[] = {
-  { CIEDPC_TASK_NORM_USR_ID,  CIEDPC_TASK_PRI_LEVEL_8, {0}, {0}, task_norm_usr_handler,  {0}, usr_q_mem  },
-  { TASK_NORM_A_ID,           CIEDPC_TASK_PRI_LEVEL_7, {0}, {0}, task_norm_a_handler,    {0}, a_q_mem    },
-  { TASK_NORM_B_ID,           CIEDPC_TASK_PRI_LEVEL_6, {0}, {0}, task_norm_b_handler,    {0}, b_q_mem    },
-  { CIEDPC_TASK_NORM_EOT_ID,  CIEDPC_TASK_PRI_LEVEL_0, {0}, {0}, NULL,              {0}, NULL       }
+  { CIEDPC_TASK_NORM_USR_ID,  CIEDPC_TASK_PRI_LEVEL_8, task_norm_usr_handler, {0}, usr_q_mem  },
+  { TASK_NORM_A_ID,           CIEDPC_TASK_PRI_LEVEL_7, task_norm_a_handler,   {0}, a_q_mem    },
+  { TASK_NORM_B_ID,           CIEDPC_TASK_PRI_LEVEL_6, task_norm_b_handler,   {0}, b_q_mem    },
+  { CIEDPC_TASK_NORM_EOT_ID,  CIEDPC_TASK_PRI_LEVEL_0, NULL,                  {0}, NULL       }
 };
 
 /**
