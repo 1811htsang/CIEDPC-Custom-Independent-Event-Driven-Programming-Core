@@ -4,6 +4,24 @@
 
 ## Công việc cần làm
 
-- [ ] Hoàn thiện phân tích lõi tham chiếu AKEDP hiện có để đưa ra tài liệu phân tích & đề xuất cải tiến.
-- [ ] Xây dựng tài liệu thiết kế chi tiết cho lõi tham chiếu AKEDP, bao gồm kiến trúc hệ thống, các module chính và cách chúng tương tác với nhau.
-- [ ] Bổ sung các tài liệu nghiên cứu về mô hình EDP.
+- [x] Hoàn thiện phân tích lõi tham chiếu AKEDP hiện có để đưa ra tài liệu phân tích & đề xuất cải tiến.
+- [x] Remove các obsolete code và thay thế bằng cấu trúc thư mục + cấu trúc code mới.
+- [x] Hoàn thiện thông tin core gốc
+- [x] Hoàn thiện message pool implementation và tích hợp vào lõi CIEDPC.
+- [x] Hoàn thiện FSM, TSM làm cơ sở để implement vào task driver.
+- [x] Hoàn thiện task driver implementation và tích hợp vào lõi CIEDPC.
+- [x] Hoàn thiện timer driver implementation và tích hợp vào lõi CIEDPC.
+- [x] Hoàn thiện ISR Bridge implementation và tích hợp vào lõi CIEDPC.
+- [x] Thiết kế testing chức năng trên task, timer, isr, message pool, tsm.
+- [x] Bổ sung thiết kế testing MSG allocation cho task.
+- [x] Bổ sung thiết kế testing FSM cho task.
+- [x] Sửa đổi bổ sung thiết kế hàm khởi tạo FSM để tránh cyclic dependency giữa FSM, message pool và task driver.
+- [x] Bổ sung API cho tương tác với task poll.
+- [x] Bổ sung driver memrp để thực hiện memory profiling và tối ưu hóa memory footprint của lõi CIEDPC.
+- [x] Viết tài liệu hướng dẫn sử dụng và phát triển lõi CIEDPC.
+- [x] Kiểm tra các data types sử dụng nhằm thu gọn memory footprint.
+- [x] Bổ sung linting và code formatting để đảm bảo codebase sạch sẽ và dễ đọc.
+- [ ] Bổ sung template code cho phần app layer để làm ví dụ cho việc phát triển ứng dụng trên nền tảng CIEDPC.
+- [ ] Hoàn thiện test case để thống nhất định dạng và quy trình testing cho các module của lõi CIEDPC.
+- [ ] Import thiết kế vào STM32 nhằm thử nghiệm thực tế trên phần cứng.
+- [ ] Bổ sung RAM profiling cho memrp để đánh giá hiệu quả sử dụng bộ nhớ của lõi CIEDPC trên đa nền tảng.
