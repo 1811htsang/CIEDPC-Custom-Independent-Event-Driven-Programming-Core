@@ -4,9 +4,7 @@
  * @brief Task management definitions and utilities for CIEDPC system
  * @version 0.1
  * @date 2026-04-16
- * 
  * @copyright MIT License
- * 
  */
 #ifndef __TASK_H__
 	#define __TASK_H__

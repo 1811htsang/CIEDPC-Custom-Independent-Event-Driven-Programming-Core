@@ -10,6 +10,7 @@ set(CORE_SOURCES
   ../../core/src/ciedpc_msg.c
   ../../core/src/ciedpc_task.c
   ../../core/src/ciedpc_timer.c
+  ../../pal/service/memrp/pal_memrp.c
   ../../common/container/fifo/fifo.c
 )
 
@@ -44,6 +45,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   ../../common/container/fifo/
   ../../pal/
   ../../pal/arch/linux/   # Cần include cho từng arch cụ thể
+  ../../pal/service/memrp/
   ./
 )
 

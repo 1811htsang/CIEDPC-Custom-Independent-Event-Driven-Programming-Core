@@ -4,9 +4,7 @@
  * @brief Implementation of task management for CIEDPC system
  * @version 0.1
  * @date 2026-04-16
- * 
  * @copyright MIT License
- * 
  */
 #include <string.h>
 #include "ciedpc_core.h"
