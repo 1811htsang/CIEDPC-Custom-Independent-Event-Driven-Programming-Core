@@ -18,7 +18,10 @@
 - [x] Sửa đổi bổ sung thiết kế hàm khởi tạo FSM để tránh cyclic dependency giữa FSM, message pool và task driver.
 - [x] Bổ sung API cho tương tác với task poll.
 - [x] Bổ sung driver memrp để thực hiện memory profiling và tối ưu hóa memory footprint của lõi CIEDPC.
-- [ ] Viết tài liệu hướng dẫn sử dụng và phát triển lõi CIEDPC.
+- [x] Viết tài liệu hướng dẫn sử dụng và phát triển lõi CIEDPC.
+- [x] Kiểm tra các data types sử dụng nhằm thu gọn memory footprint.
+- [x] Bổ sung linting và code formatting để đảm bảo codebase sạch sẽ và dễ đọc.
+- [ ] Bổ sung template code cho phần app layer để làm ví dụ cho việc phát triển ứng dụng trên nền tảng CIEDPC.
+- [ ] Hoàn thiện test case để thống nhất định dạng và quy trình testing cho các module của lõi CIEDPC.
 - [ ] Import thiết kế vào STM32 nhằm thử nghiệm thực tế trên phần cứng.
-- [ ] Kiểm tra các data types sử dụng nhằm thu gọn memory footprint.
-- [ ] Bổ sung linting và code formatting để đảm bảo codebase sạch sẽ và dễ đọc.
+- [ ] Bổ sung RAM profiling cho memrp để đánh giá hiệu quả sử dụng bộ nhớ của lõi CIEDPC trên đa nền tảng.
