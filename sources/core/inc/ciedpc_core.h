@@ -50,19 +50,19 @@
     #define CIEDPC_TASK_NORM_OFFSET						  (0x06) // Offset để tránh trùng với các tác vụ khác
 
     /**
-     * @brief Định nghĩa các hằng số cho ID của tác vụ polling
+     * @brief Định nghĩa các hằng số cho ID của tác vụ poll
      * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xDx`,
      *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF)
      */
-		#define CIEDPC_TASK_POLLING_MAX_SIZE					(8u) // 8 tác vụ, từ 0 đến 7
-		#define CIEDPC_TASK_POLL_WATCHDOG_ID        (0xD0) // Tác vụ "đá" Watchdog để reset chip nếu treo
-		#define CIEDPC_TASK_POLL_SYS_LIFE_ID        (0xD1) // Tác vụ nháy LED Heartbeat (Nhịp tim hệ thống)
-		#define CIEDPC_TASK_POLL_MEM_MONITOR_ID     (0xD2) // Tác vụ giám sát rò rỉ RAM hoặc tràn Stack
+		#define CIEDPC_TASK_POLL_MAX_SIZE					  (8u) // 8 tác vụ, từ 0 đến 7
+		#define CIEDPC_TASK_POLL_WDG_ID             (0xD0) // Tác vụ "đá" Watchdog để reset chip nếu treo
+		#define CIEDPC_TASK_POLL_SYSLF_ID           (0xD1) // Tác vụ nháy LED Heartbeat (Nhịp tim hệ thống)
+		#define CIEDPC_TASK_POLL_MEMRP_ID           (0xD2) // Tác vụ giám sát rò rỉ RAM hoặc tràn Stack
 		#define CIEDPC_TASK_POLL_IDLE_ID            (0xD3) // Tác vụ nhàn rỗi 
-		#define CIEDPC_TASK_POLLING_EOT_ID         	(0xDF) // Kết thúc danh sách tác vụ polling
-		#define CIEDPC_TASK_POLLING_MIN_ID         	(0xD0) // ID đầu tiên
-		#define CIEDPC_TASK_POLLING_MAX_ID         	(0xDF) // ID cuối cùng
-    #define CIEDPC_TASK_POLLING_OFFSET          (0x04) // Offset để tránh trùng với các tác vụ khác
+		#define CIEDPC_TASK_POLL_EOT_ID         	  (0xDF) // Kết thúc danh sách tác vụ poll
+		#define CIEDPC_TASK_POLL_MIN_ID         	  (0xD0) // ID đầu tiên
+		#define CIEDPC_TASK_POLL_MAX_ID         	  (0xDF) // ID cuối cùng
+    #define CIEDPC_TASK_POLL_OFFSET             (0x04) // Offset để tránh trùng với các tác vụ khác
 
 		/**
      * @brief Định nghĩa các hằng số cho mức độ ưu tiên của tác vụ trong hệ thống CIEDPC

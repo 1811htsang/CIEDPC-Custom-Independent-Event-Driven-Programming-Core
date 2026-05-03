@@ -53,12 +53,12 @@
 
 		/**
 		 * @brief Định nghĩa các kiểu dữ liệu để quản lý hàm thực thi của tác vụ
-		 * @attention `pf_task_polling` được sử dụng để quản lý các hàm thực thi của tác vụ theo cơ chế polling-driven, 
+		 * @attention `pf_task_poll` được sử dụng để quản lý các hàm thực thi của tác vụ theo cơ chế poll-driven, 
 		 * 						nơi mỗi tác vụ sẽ được kích hoạt và thực thi liên tục hoặc theo một lịch trình nhất định, 
 		 * 						không phụ thuộc vào việc nhận tin nhắn.
 		 */
 		typedef void (*pf_task_norm)(ciedpc_msg_t*);
-		typedef void (*pf_task_polling)(); 
+		typedef void (*pf_task_poll)(); 
 
 		/**
 		 * @brief Định nghĩa cấu trúc để quản lý thông tin của tác vụ message-driven
@@ -81,16 +81,16 @@
 		} task_norm_t;
 
 		/**
-		 * @brief Định nghĩa cấu trúc để quản lý thông tin của tác vụ polling-driven
-		 * @attention `ability` được sử dụng để quản lý khả năng của tác vụ polling, 
-		 *            cho phép hệ thống CIEDPC xác định và điều phối việc thực thi của các tác vụ polling 
+		 * @brief Định nghĩa cấu trúc để quản lý thông tin của tác vụ poll-driven
+		 * @attention `ability` được sử dụng để quản lý khả năng của tác vụ poll, 
+		 *            cho phép hệ thống CIEDPC xác định và điều phối việc thực thi của các tác vụ poll 
 		 * 						dựa trên khả năng của chúng.
 		 */
-		typedef struct task_polling_t {
-			task_id_t id;									// ID của tác vụ polling
-			ui8 ability;									// Khả năng của tác vụ polling
-			pf_task_polling task_polling;	// Hàm thực thi của tác vụ polling
-		} task_polling_t;
+		typedef struct task_poll_t {
+			task_id_t id;									// ID của tác vụ poll
+			ui8 ability;									// Khả năng của tác vụ poll
+			pf_task_poll task_poll;	// Hàm thực thi của tác vụ poll
+		} task_poll_t;
 
 		/**
 		 * @brief Hàm tạo tác vụ message-driven trong hệ thống CIEDPC
@@ -99,10 +99,10 @@
 		void ciedpc_task_norm_create(task_norm_t* task_table);
 
 		/**
-		 * @brief Hàm tạo tác vụ polling-driven trong hệ thống CIEDPC
-		 * @param task_table: Con trỏ đến bảng chứa thông tin của các tác vụ polling-driven cần tạo     
+		 * @brief Hàm tạo tác vụ poll-driven trong hệ thống CIEDPC
+		 * @param task_table: Con trỏ đến bảng chứa thông tin của các tác vụ poll-driven cần tạo     
 		 */
-		void ciedpc_task_polling_create(task_polling_t* task_table);
+		void ciedpc_task_poll_create(task_poll_t* task_table);
 
 		/**
 		 * @brief Hàm gửi tin nhắn từ một tác vụ đến một tác vụ khác trong hệ thống CIEDPC
@@ -110,7 +110,7 @@
 		 * @param msg: Con trỏ đến cấu trúc tin nhắn cần gửi
 		 * @return RETR_STAT: Trả về trạng thái của việc gửi tin nhắn
 		 */
-		RETR_STAT ciedpc_task_post_msg(task_id_t dest_id, ciedpc_msg_t* msg);
+		RETR_STAT ciedpc_task_norm_post_msg(task_id_t dest_id, ciedpc_msg_t* msg);
 
 		/**
 		 * @brief Hàm đăng ký tín hiệu từ ISR cho tác vụ trong hệ thống CIEDPC
@@ -119,7 +119,7 @@
 		 * @return RETR_STAT: Trả về trạng thái của việc đăng ký tín hiệu
 		 * @attention Hàm này được thiết kế tách biệt dành cho việc xử lý với ISR
 		 */
-		RETR_STAT ciedpc_task_post_isr(task_id_t dest_id, ui8 sig);
+		RETR_STAT ciedpc_task_norm_post_isr(task_id_t dest_id, ui8 sig);
 
 		/**
 		 * @brief Hàm lập lịch và thực thi các tác vụ trong hệ thống CIEDPC
@@ -132,13 +132,13 @@
 		 * @brief Hàm lấy ID của tác vụ hiện tại đang được thực thi
 		 * @return task_id_t 
 		 */
-		task_id_t ciedpc_task_get_current_id();
+		task_id_t ciedpc_task_norm_get_current_id();
 
 		/**
 		 * @brief Hàm lấy tin nhắn hiện tại đang được xử lý bởi tác vụ
 		 * @return ciedpc_msg_t* 
 		 */
-		ciedpc_msg_t* ciedpc_task_get_current_msg();
+		ciedpc_msg_t* ciedpc_task_norm_get_current_msg();
 
 		/**
 		 * @brief Hàm kiểm tra xem tác vụ có sẵn sàng để thực thi hay không
@@ -147,7 +147,7 @@
 		 * @return true nếu tác vụ sẵn sàng để thực thi
 		 * @return false nếu tác vụ không sẵn sàng để thực thi
 		 */
-		bool ciedpc_task_is_ready(task_id_t task_id);
+		bool ciedpc_task_norm_is_ready(task_id_t task_id);
 
 		/**
 		 * @brief Lấy thông tin hàng đợi của một Task
@@ -155,7 +155,14 @@
 		 * @param used Con trỏ đến biến sẽ nhận số lượng tin nhắn đang có trong hàng đợi của Task
 		 * @param max Con trỏ đến biến sẽ nhận kích thước tối đa của hàng đợi của Task
 		 */
-		void ciedpc_task_get_queue_stats(task_id_t tid, ui8* used, ui8* max);
+		void ciedpc_task_norm_get_queue_stats(task_id_t tid, ui8* used, ui8* max);
+
+		/**
+		 * @brief Thiết lập khả năng thực thi cho tác vụ poll
+		 * @param tid ID của tác vụ poll cần thiết lập khả năng
+		 * @param ability Khả năng thực thi của tác vụ poll
+		 */
+		void ciedpc_task_poll_set_ability(task_id_t tid, ui8 ability);
 
 	#ifdef __cplusplus
 	}

@@ -100,7 +100,7 @@ void pal_linux_init_env(void) {
 
 void pal_linux_simulate_interrupt(ui8 task_id, ui8 signal) {
     /* Giả lập việc nạp tín hiệu từ ngoại vi vào Bridge của Core */
-    ciedpc_task_post_isr(task_id, signal);
+    ciedpc_task_norm_post_isr(task_id, signal);
 }
 
 /* Hàm này phải match với pthread callback */

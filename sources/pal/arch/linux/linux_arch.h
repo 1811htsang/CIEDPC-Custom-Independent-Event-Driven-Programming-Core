@@ -21,7 +21,7 @@
 
   /**
    * @brief Giả lập một ngắt phần cứng (Ví dụ: phím nhấn từ Terminal)
-   * Để gọi ciedpc_task_post_isr từ ngoài vào Core
+   * Để gọi ciedpc_task_norm_post_isr từ ngoài vào Core
    */
   void pal_linux_simulate_interrupt(ui8 task_id, ui8 signal);
 

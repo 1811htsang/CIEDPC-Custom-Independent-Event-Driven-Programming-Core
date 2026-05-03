@@ -171,7 +171,7 @@ void ciedpc_timer_tick(void) {
 					printf("[Timer Tick] Timer ticking: Task ID=%u, Signal=0x%02X, Counter=%u\n", curr->des_task_id, curr->sig, curr->counter);
 					if (curr->counter == 758) {
 						printf("[Timer Tick] Simulating random STOP signal at counter 758 for Task ID=%u\n", curr->des_task_id);
-						ciedpc_task_post_isr(TASK_NORM_CONTROLLER_ID, SIG_USR_STOP);
+						ciedpc_task_norm_post_isr(TASK_NORM_CONTROLLER_ID, SIG_USR_STOP);
 					}
 				#endif
 				curr->counter--;
@@ -184,8 +184,8 @@ void ciedpc_timer_tick(void) {
 				#endif
 
 				/* 1. Đã hết hạn -> Publish Event tới Task đích */
-				// Ở đây dùng ciedpc_task_post_isr vì chúng ta đang ở ngữ cảnh ngắt tick
-				ciedpc_task_post_isr(curr->des_task_id, curr->sig);
+				// Ở đây dùng ciedpc_task_norm_post_isr vì chúng ta đang ở ngữ cảnh ngắt tick
+				ciedpc_task_norm_post_isr(curr->des_task_id, curr->sig);
 
 				/* 2. Xử lý loại Timer */
 				if (curr->type == CIEDPC_TIMER_PERIODIC) {

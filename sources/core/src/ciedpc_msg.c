@@ -167,7 +167,7 @@ ciedpc_msg_t* ciedpc_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 	pal_exit_critical();
 
 	if (msg != NULL) {
-		msg->src_task_id = ciedpc_task_get_current_id();
+		msg->src_task_id = ciedpc_task_norm_get_current_id();
 		msg->des_task_id = des_task_id;
 		msg->sig = sig;
 		msg->ref_count = 1; // mặc định 1 tham chiếu khi tạo mới
@@ -384,7 +384,7 @@ void ciedpc_msg_drain_isr_pool(void) {
 		ciedpc_msg_t* msg = ciedpc_msg_alloc(msg_isr.des_task_id, msg_isr.sig, 0);
 
 		if (msg) {
-			ciedpc_task_post_msg(msg->des_task_id, msg);
+			ciedpc_task_norm_post_msg(msg->des_task_id, msg);
 		} else {
 			// Xử lý tình huống cấp phát tin nhắn thất bại, có thể log lỗi hoặc thực hiện hành động khắc phục
 			internal_ciedpc_msg_pool_panic(CIEDPC_MSG_ISR_QUEUE_SIZE); // Sử dụng một mã lỗi đặc biệt cho Pool ISR

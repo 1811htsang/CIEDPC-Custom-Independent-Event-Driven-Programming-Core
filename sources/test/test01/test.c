@@ -66,7 +66,7 @@ void task_controller_handler(ciedpc_msg_t* msg) {
   if (msg->sig == SIG_USR_START || msg->sig == SIG_USR_STOP) {
     printf("[Controller] Relaying Signal 0x%02X to Blinker\n", msg->sig);
     ciedpc_msg_t* m = ciedpc_msg_alloc(TASK_NORM_BLINKER_ID, msg->sig, 0);
-    if (m) ciedpc_task_post_msg(TASK_NORM_BLINKER_ID, m);
+    if (m) ciedpc_task_norm_post_msg(TASK_NORM_BLINKER_ID, m);
   }
 }
 
@@ -107,7 +107,7 @@ int main() {
 
   /* 4. Giả lập một ngắt từ bên ngoài (ISR Bridge) */
   printf("[System] Simulating External Interrupt: Start Button Pressed...\n");
-  ciedpc_task_post_isr(TASK_NORM_CONTROLLER_ID, SIG_USR_START);  
+  ciedpc_task_norm_post_isr(TASK_NORM_CONTROLLER_ID, SIG_USR_START);  
 
   int stop_flag = 0;
 

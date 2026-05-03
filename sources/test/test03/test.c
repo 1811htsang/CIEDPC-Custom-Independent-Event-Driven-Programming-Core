@@ -73,7 +73,7 @@ void usr_state_active(ciedpc_msg_t* msg) {
       printf("[USR] Entering ACTIVE state. System is now active.\n");
       // Thực hiện gửi SIG_USR_START tới task A để kích hoạt chuỗi hành động
       ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(TASK_NORM_A_ID, SIG_USR_START, 0);
-      ciedpc_task_post_msg(TASK_NORM_A_ID, msg_to_a);
+      ciedpc_task_norm_post_msg(TASK_NORM_A_ID, msg_to_a);
       printf("[USR] Sent START signal to Task A. Waiting for further signals...\n");
       break;
     case SIG_USR_STOP:
@@ -123,7 +123,7 @@ void task_a_state_active(ciedpc_msg_t* msg) {
       // Thực hiện gửi tin nhắn từ Task A sang Task B
       ciedpc_msg_t* msg_to_b = ciedpc_msg_alloc(TASK_NORM_B_ID, SIG_TSK_A_TO_B, sizeof(char*));
       ciedpc_msg_set_data_ref(msg_to_b, (char*)&data_a_to_b); // Truyền địa chỉ của chuỗi dữ liệu
-      ciedpc_task_post_msg(TASK_NORM_B_ID, msg_to_b);
+      ciedpc_task_norm_post_msg(TASK_NORM_B_ID, msg_to_b);
       printf("[TSKA] Message sent to Task B. Waiting for response...\n");
       break;
     case SIG_TSK_B_TO_A:
@@ -180,7 +180,7 @@ void task_b_state_active(ciedpc_msg_t* msg) {
       // Thực hiện gửi tin nhắn phản hồi từ Task B về Task A
       ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(TASK_NORM_A_ID, SIG_TSK_B_TO_A, sizeof(char*));
       ciedpc_msg_set_data_ref(msg_to_a, (char*)&data_b_to_a);
-      ciedpc_task_post_msg(TASK_NORM_A_ID, msg_to_a);
+      ciedpc_task_norm_post_msg(TASK_NORM_A_ID, msg_to_a);
       printf("[TSKB] Message sent back to Task A. Return to IDLE state...\n");
       ciedpc_fsm_go_next(&fsm_b, task_b_state_idle);
        /**
@@ -256,7 +256,7 @@ int main() {
   ciedpc_fsm_init(&fsm_b, task_b_state_idle);
 
   ciedpc_msg_t* start_msg = ciedpc_msg_alloc(CIEDPC_TASK_NORM_USR_ID, SIG_USR_START, 0);
-  ciedpc_task_post_msg(CIEDPC_TASK_NORM_USR_ID, start_msg);
+  ciedpc_task_norm_post_msg(CIEDPC_TASK_NORM_USR_ID, start_msg);
 
   while (1) {
     ciedpc_task_scheduler();
