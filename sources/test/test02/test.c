@@ -26,6 +26,10 @@ sta ciedpc_msg_t* usr_q_mem[8];
 sta ciedpc_msg_t* a_q_mem[8];
 sta ciedpc_msg_t* b_q_mem[8];
 
+/**
+ * @brief Khai báo các chuỗi dữ liệu để truyền giữa Task A và Task B
+ */
+
 sta const char* data_a_to_b = "Hello from Task A!";
 sta const char* data_b_to_a = "Hello from Task B!";
 
@@ -133,6 +137,7 @@ void* linux_tick_thread(void* arg) {
 /**
  * @brief Hàm main để khởi chạy bài test
  */
+
 int main() {
   printf("=== CIEDPC LINUX INTEGRATION TEST ===\n");
 

@@ -26,12 +26,24 @@ sta ciedpc_msg_t* usr_q_mem[8];
 sta ciedpc_msg_t* a_q_mem[8];
 sta ciedpc_msg_t* b_q_mem[8];
 
+/**
+ * @brief Khai báo các chuỗi dữ liệu để truyền giữa Task A và Task B
+ */
+
 sta const char* data_a_to_b = "Hello from Task A!";
 sta const char* data_b_to_a = "Hello from Task B!";
 
-sta ciedpc_fsm_t fsm_usr; // FSM cho task USR
-sta ciedpc_fsm_t fsm_a; // FSM cho task A
-sta ciedpc_fsm_t fsm_b; // FSM cho task B
+/**
+ * @brief Định nghĩa các FSM cho các task
+ */
+
+sta ciedpc_fsm_t fsm_usr;
+sta ciedpc_fsm_t fsm_a;
+sta ciedpc_fsm_t fsm_b;
+
+/**
+ * @brief Declaration của các state handler cho FSM của task USR, task A và task B
+ */
 
 sta void usr_state_idle(ciedpc_msg_t* msg);
 sta void usr_state_active(ciedpc_msg_t* msg);
@@ -43,6 +55,7 @@ sta void task_b_state_active(ciedpc_msg_t* msg);
 /**
  * @brief Định nghĩa các trạng thái FSM
  */
+
 void usr_state_idle(ciedpc_msg_t* msg) {
   switch (msg->sig) {
     case CIEDPC_FSM_SIG_INIT:
@@ -107,6 +120,7 @@ void task_a_state_idle(ciedpc_msg_t* msg) {
       printf("[TSKA] Received START signal. Transitioning to ACTIVE state...\n");
       ciedpc_fsm_go_next(&fsm_a, task_a_state_active);
       break;
+    
     default:
       printf("[TSKA] Encountered unexpected signal in IDLE state: %x\n", msg->sig);
       break;
@@ -217,6 +231,7 @@ void task_b_handler(ciedpc_msg_t* msg) {
  * @attention TASK_USR được sử dụng làm entry point để kích hoạt hệ thống, 
  *            trong khi TASK_A và TASK_B sẽ thực hiện các chức năng chính của bài test
  */
+
 task_norm_t app_task_table[] = {
   { CIEDPC_TASK_NORM_USR_ID,  CIEDPC_TASK_PRI_LEVEL_8, {0}, {0}, task_usr_handler,  {0}, usr_q_mem  },
   { TASK_NORM_A_ID,           CIEDPC_TASK_PRI_LEVEL_7, {0}, {0}, task_a_handler,    {0}, a_q_mem    },
@@ -228,6 +243,7 @@ task_norm_t app_task_table[] = {
  * @brief Hàm giả lập Tick của hệ thống, được chạy trong một luồng riêng biệt 
  *        để mô phỏng hoạt động của timer phần cứng trong môi trường Linux
  */
+
 void* linux_tick_thread(void* arg) {
   while (1) {
     usleep(1000); // 1ms
@@ -239,6 +255,7 @@ void* linux_tick_thread(void* arg) {
 /**
  * @brief Hàm main để khởi chạy bài test
  */
+
 int main() {
   printf("=== CIEDPC LINUX INTEGRATION TEST ===\n");
 

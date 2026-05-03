@@ -4,9 +4,7 @@
  * @brief Task management definitions and utilities for CIEDPC system
  * @version 0.1
  * @date 2026-04-16
- * 
  * @copyright MIT License
- * 
  */
 #ifndef __TASK_H__
 	#define __TASK_H__
@@ -73,8 +71,6 @@
 		typedef struct task_norm_t {
 			task_id_t id;
 			task_pri_t pri;
-			ciedpc_fsm_t fsm;
-			ciedpc_tsm_t tsm;
 			pf_task_norm task_norm;
 			fifo_t msg_queue; 
 			ciedpc_msg_t** msg_queue_buffer;
