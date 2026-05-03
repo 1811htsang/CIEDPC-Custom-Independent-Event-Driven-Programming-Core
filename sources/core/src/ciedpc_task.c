@@ -294,12 +294,8 @@ void internal_ciedpc_task_norm_dispatch(task_norm_t* task, ciedpc_msg_t* msg) {
   g_current_msg = msg; // Cập nhật con trỏ đến tin nhắn hiện tại đang được xử lý
   g_active_task_norm_id = task->id; // Cập nhật ID của tác vụ hiện tại đang được thực thi
 
-  if (task->fsm.state != NULL) {
-    // Nếu tác vụ có FSM, gọi hàm xử lý trạng thái hiện tại của FSM với tin nhắn làm tham số
-    ciedpc_fsm_dispatch(&task->fsm, msg);
-  } else {
-    task->task_norm(msg); // Nếu tác vụ không có FSM, gọi trực tiếp hàm thực thi của tác vụ với tin nhắn làm tham số
-  }
+  // Thực thi hàm xử lý của tác vụ với tin nhắn hiện tại
+  task->task_norm(msg); 
 
   // Sau khi thực thi xong, có thể thực hiện các bước dọn dẹp hoặc cập nhật trạng thái nếu cần thiết
   ciedpc_msg_free(msg); // Giải phóng tin nhắn sau khi đã xử lý xong
