@@ -4,6 +4,8 @@
 
 ## Công việc cần làm
 
+### Phiên bản 1.0.0
+
 - [x] Hoàn thiện phân tích lõi tham chiếu AKEDP hiện có để đưa ra tài liệu phân tích & đề xuất cải tiến.
 - [x] Remove các obsolete code và thay thế bằng cấu trúc thư mục + cấu trúc code mới.
 - [x] Hoàn thiện thông tin core gốc
@@ -21,7 +23,13 @@
 - [x] Viết tài liệu hướng dẫn sử dụng và phát triển lõi CIEDPC.
 - [x] Kiểm tra các data types sử dụng nhằm thu gọn memory footprint.
 - [x] Bổ sung linting và code formatting để đảm bảo codebase sạch sẽ và dễ đọc.
-- [ ] Bổ sung template code cho phần app layer để làm ví dụ cho việc phát triển ứng dụng trên nền tảng CIEDPC.
+
+### Phiên bản 1.0.1
+
+- [x] Bổ sung template code cho phần app layer để làm ví dụ cho việc phát triển ứng dụng trên nền tảng CIEDPC.
+- [x] Import thiết kế vào STM32 nhằm thử nghiệm thực tế trên phần cứng.
+- [x] Bổ sung RAM profiling cho memrp để đánh giá hiệu quả sử dụng bộ nhớ của lõi CIEDPC trên đa nền tảng.
+- [ ] Import các template code vào lại source code để ra mắt phiên bản 1.0.1 của lõi CIEDPC.
 - [ ] Hoàn thiện test case để thống nhất định dạng và quy trình testing cho các module của lõi CIEDPC.
-- [ ] Import thiết kế vào STM32 nhằm thử nghiệm thực tế trên phần cứng.
-- [ ] Bổ sung RAM profiling cho memrp để đánh giá hiệu quả sử dụng bộ nhớ của lõi CIEDPC trên đa nền tảng.
+- [ ] Bổ sung thiết kế 1 internal console để thay thế printf debugging trong để hỗ trợ kit không có cổng UART.
+- [ ] Thiết kế getter để truyền dữ liệu từ internal console ra ngoài màn hình hoặc UART.
