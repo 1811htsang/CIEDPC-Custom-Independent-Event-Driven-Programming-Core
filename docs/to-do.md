@@ -48,10 +48,16 @@
 - [ ] Thiết kế getter để truyền dữ liệu từ internal console ra ngoài màn hình hoặc UART.
 - [ ] Ra mắt phiên bản 1.0.2 của lõi CIEDPC với đầy đủ test case và tài liệu hướng dẫn sử dụng internal console.
 
+### Phiên bản 1.0.3
+
+- [ ] Nâng cấp thiết kế phân phối task với API cho phép thực hiện cơ chế Priority Escalation để cho phép một task có thể tạm thời tăng độ ưu tiên của mình khi cần thiết và hoàn trả độ ưu tiên về mức ban đầu sau khi hoàn thành công việc khẩn cấp.
+- [ ] Bổ sung tài liệu trình bày về cơ chế Priority Escalation và Scheduling Policy của CIEDPC để làm rõ cách thức hoạt động và lợi ích của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
+- [ ] Bổ sung tài liệu trình bày về giới hạn mà CIEDPC có thể được sử dụng trong hệ thống nhúng và khi nào nên cân nhắc sử dụng một hệ điều hành nhúng đầy đủ thay vì CIEDPC, nhằm giúp người dùng hiểu rõ hơn về phạm vi ứng dụng và lựa chọn phù hợp cho dự án của họ.
+
 ### Phiên bản 1.1.x
 
 - [ ] Bổ sung tài liệu đối chiếu thiết kế của CIEDPC với mô hình chuẩn QP/C của Miro Samek để làm rõ các điểm tương đồng và khác biệt trong kiến trúc và cách tiếp cận.
-- [ ] Triển khai itnlog (Internal Logger) để lưu log nội bộ trên RAM/Flash và hỗ trợ cơ chế ghi đè vòng tròn - ring buffer đã có sẵn trong `common/containter/ring_buffer.h`.
+- [ ] Triển khai itnlog (Internal Logger) nâng cao để lưu log nội bộ trên RAM/Flash và hỗ trợ cơ chế ghi đè vòng tròn - ring buffer đã có sẵn trong `common/containter/ring_buffer.h`.
 - [ ] Tích hợp ciedpc_spy (Software Tracing) vào Scheduler và Message Pool để xuất trace phục vụ phân tích luồng xử lý.
 
 ### Phiên bản 1.2.x
