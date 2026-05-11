@@ -940,7 +940,7 @@ Tham khảo theo hình dưới đây:
 
 Lưu ý rằng, sử dụng đường dẫn khái quát nhằm mục đích include toàn bộ các file header & implementation sẽ không hỗ trợ trên cấu hình của STM32CubeIDE. Do đó cần phải thêm từng file header và source cụ thể vào project để đảm bảo rằng các API của CIEDPC có thể được sử dụng một cách chính xác trong quá trình phát triển ứng dụng trên STM32.
 
-Sau đó, bên cạnh mục `Includes`, ta bổ sung cấu hình của `Source Location` để thêm đường dẫn đến thư mục chứa các file source của CIEDPC (ví dụ: `$(PROJECT_DIR)/<Tên thư mục vừa clone - ví dụ: ciedpc>/src`). Cần đảm bảo loại bỏ các thư mục test ra khỏi cấu hình này để tránh việc biên dịch các file test không cần thiết vào project của STM32, điều này sẽ giúp giảm thiểu kích thước của firmware và tránh các lỗi biên dịch không mong muốn do các file test có thể chứa các phần code không tương thích với môi trường STM32.
+Sau đó, bên cạnh mục `Includes`, ta bổ sung cấu hình của `Source Location` để thêm đường dẫn đến thư mục chứa các file source của CIEDPC (ví dụ: `$(PROJECT_DIR)/<Tên thư mục vừa clone - ví dụ: ciedpc>/src`). Cần đảm bảo loại bỏ các thư mục test và các cấu hình của arch khác để tránh lỗi biên dịch do có các file source không tương thích với nền tảng STM32.
 
 <div style="page-break-after: always"></div>
 
@@ -949,6 +949,31 @@ Tham khảo theo hình dưới đây:
 ![img3](./images/image3.png)
 
 <div style="page-break-after: always"></div>
+
+Tiếp đến cấu hình các handler quan trọng như `SysTick_Handler()` và `HardFault_Handler()` để xử lý các API của Core liên quan đến timer tick và xử lý lỗi hệ thống. Cần đảm bảo rằng các handler này được cấu hình đúng cách để đảm bảo rằng hệ thống có thể hoạt động một cách ổn định và hiệu quả trên nền tảng STM32.
+
+Ví dụ như đã cấu hình trong `stm32_arch`:
+
+```c
+void SysTick_Handler(void) {
+ HAL_IncTick();
+ if (is_inited == 0x1u) {
+  ciedpc_timer_tick();
+ }
+}
+
+__attribute__((naked)) void HardFault_Handler(void) {
+    __asm volatile (
+        "tst lr, #4 \n"
+        "ite eq \n"
+        "mrseq r0, msp \n"
+        "mrsne r0, psp \n"
+        "b internal_hardfault_decoder \n"
+    );
+}
+```
+
+Lưu ý rằng, sau khi hoàn thành cấu hình trong `stm32_arch` thì cần đảm bảo các implementation trong `Core/src/stm32f1xxx_it.c` được cập nhất các handler đã re-implement trong `stm32_arch` thành `__weak` để tránh lỗi trùng lặp định nghĩa khi biên dịch.
 
 ## Các lưu ý quan trọng
 
