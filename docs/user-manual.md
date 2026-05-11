@@ -411,7 +411,7 @@ Sau khi đã hoàn thành việc khai báo các handler, khởi tạo TSM table 
 
 <div style="page-break-after: always"></div>
 
-### Ví dụ về chương trình mẫu
+### Ví dụ về chương trình mẫu không phân tách khai báo
 
 ```c
 #include "ciedpc_core.h"
@@ -562,6 +562,391 @@ int main() {
 // Các handler cho TSM, FSM và Task sẽ được định nghĩa ở đây, trong đó sẽ thực hiện logic xử lý tín hiệu và quản lý trạng thái của TSM và FSM tương ứng với từng tác vụ.
 
 ```
+
+<div style="page-break-after: always"></div>
+
+### Ví dụ về chương trình mẫu phân tách khai báo trên STM32CubeIDE
+
+Ở file `app_decl.h`:
+
+```c
+/**
+ * @file app_decl.h
+ * @author Shang Huang
+ * @brief Application declaration header file
+ * @version 0.1
+ * @date 2026-05-07
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
+#ifndef __APP_DECL_H__
+ #define __APP_DECL_H__
+
+ /**
+  * @brief Khai báo thư viện sử dụng
+  */
+
+ #include "ciedpc_core.h"
+ #include "ciedpc_task.h"
+ #include "ciedpc_tsm.h"
+ #include "ciedpc_fsm.h"
+ #include "ciedpc_msg.h"
+ #include "ciedpc_timer.h"
+
+ /**
+  * @brief Khai báo tác vụ
+  */
+
+ #define TASK_NORM_A_ID    (0xE6)
+ #define TASK_NORM_B_ID    (0xE7)
+
+ /**
+  * @brief Khai báo tín hiệu giao tiếp giữa các tác vụ
+  */
+
+ #define SIG_USR_START     (0x01u)
+ #define SIG_USR_STOP      (0x02u)
+ #define SIG_TSK_A_TO_B    (0x03u)
+ #define SIG_TSK_B_TO_A    (0x04u)
+```
+
+<div style="page-break-after: always"></div>
+
+```c
+ /**
+  * @brief Khai báo message queue cho các tác vụ
+  * @attention Mỗi tác vụ sẽ có một hàng đợi tin nhắn riêng biệt
+  *       Tùy thuộc vào nhu cầu của ứng dụng để điều chỉnh kích thước của hàng đợi, 
+  *       nhưng cần đảm bảo không vượt quá giới hạn của hệ thống CIEDPC
+  */
+
+ extern ciedpc_msg_t* usr_q_mem[8];
+ extern ciedpc_msg_t* a_q_mem[8];
+ extern ciedpc_msg_t* b_q_mem[8];
+
+ /**
+  * @brief Khai báo biến đếm hoạt động của hệ thống
+  * @attention Nên khuyến khích sử dụng biến này để theo dõi số lượng hành động 
+  *       đã thực hiện trong hệ thống khi task_scheduler được gọi,
+  *       đặc biệt hữu ích trong các bài test để xác nhận rằng hệ thống đang hoạt động như mong đợi 
+  *       và để phát hiện các vấn đề tiềm ẩn như vòng lặp vô hạn hoặc tắc nghẽn trong scheduler.
+  */
+
+ extern uint32_t system_action_count;
+
+ /**
+  * @brief Khai báo các hàm handler cho các task
+  */
+
+ void task_norm_usr_handler(ciedpc_msg_t* msg);
+ void task_norm_a_handler(ciedpc_msg_t* msg);
+ void task_norm_b_handler(ciedpc_msg_t* msg);
+ void task_poll_memrp_handler();
+
+ /**
+  * @brief Khai báo các hàm on-entry/exit cho các trạng thái FSM (nếu có)
+  */
+
+ /**
+  * @brief Khai báo các hàm on-state cho các trạng thái TSM (nếu có)
+  */
+
+ /**
+  * @brief Khai báo các state_handler cho các trạng thái FSM (nếu có)
+  */
+
+#endif //__APP_DECL_H__
+```
+
+<div style="page-break-after: always"></div>
+
+Ở file `app_cfg.h`:
+
+```c
+/**
+ * @file app_cfg.h
+ * @author Shang Huang
+ * @brief Application configuration header file
+ * @version 0.1
+ * @date 2026-05-07
+ * 
+ * @copyright Copyright (c) 2026
+ * 
+ */
+#ifndef __APP_CFG_H__
+ #define __APP_CFG_H__
+
+ /**
+  * @brief Khai báo thư viện sử dụng
+  */
+
+ #include "ciedpc_task.h"
+ #include "ciedpc_tsm.h"
+ #include "ciedpc_fsm.h"
+
+ /**
+  * @brief Khai báo danh sách tác vụ và tác vụ polling của ứng dụng
+  */
+
+ extern task_norm_t app_task_table[];
+ extern task_poll_t app_poll_table[];
+
+ /**
+  * @brief Định nghĩa bảng chuyển trạng thái cho state
+  * @attention Với n state thì có n bảng chuyển trạng thái
+  * @note Người dùng tự định nghĩa bảng, có thể xóa dòng 24 và thay thế bằng
+  *     triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM
+  */
+
+ extern const tsm_trans_t state_trans_table[];
+```
+
+<div style="page-break-after: always"></div>
+
+```c
+ /**
+  * @brief Định nghĩa bảng TSM cho task Blinker
+  * @attention Với n state thì có n entry trong bảng TSM
+  * @note Người dùng tự định nghĩa bảng, có thể xóa dòng 35 và thay thế bằng
+  *     triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM
+  */
+
+ extern const tsm_state_desc_t tsm_table[];
+
+ /**
+  * @brief Định nghĩa TSM cho tác vụ
+  * @attention Với n tác vụ sử dụng TSM thì có n định nghĩa TSM.
+  *       Tuy nhiên mỗi task không nhất thiết phải sử dụng TSM
+  * @note Người dùng tự định nghĩa TSM, có thể xóa dòng 45 và thay thế bằng
+  *     triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM cho tác vụ
+  */
+
+ extern ciedpc_tsm_t app_tsm;
+
+ /**
+  * @brief Định nghĩa FSM cho tác vụ
+  * @attention Với n tác vụ sử dụng FSM thì có n định nghĩa FSM.
+  *       Tuy nhiên mỗi task không nhất thiết phải sử dụng FSM
+  * @note Người dùng tự định nghĩa FSM, có thể xóa dòng 55 và thay thế bằng
+  *     triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng FSM cho tác vụ
+  */
+
+ extern ciedpc_fsm_t app_fsm;
+
+#endif //__APP_CFG_H__
+```
+
+<div style="page-break-after: always"></div>
+
+Ở file `app.c`:
+
+```c
+/**
+ * @file app.c
+ * @author Shang Huang
+ * @brief Application main source file
+ * @version 0.1
+ * @date 2026-05-07
+ * @copyright MIT License
+ */
+
+/**
+ * @brief Khai báo thư viện sử dụng
+ */
+
+#include "app_cfg.h"
+#include "app_decl.h"
+#include "ciedpc_core.h"
+#include "ciedpc_task.h"
+#include "ciedpc_msg.h"
+#include "ciedpc_timer.h"
+#include "pal_memrp.h"
+
+/**
+ * @brief Định nghĩa biến đếm hành động của hệ thống
+ */
+
+uint32_t system_action_count = 0x0u;
+
+/**
+ * @brief Ủy quyền sử dụng message queue cho các tác vụ đã khai báo trong app_decl.h
+ */
+
+ciedpc_msg_t* usr_q_mem[8];
+ciedpc_msg_t* a_q_mem[8];
+ciedpc_msg_t* b_q_mem[8];
+
+/**
+ * @brief Định nghĩa các chuỗi dữ liệu để truyền giữa Task A và Task B
+ */
+
+const char* data_a_to_b = "Hello from Task A!";
+const char* data_b_to_a = "Hello from Task B!";
+```
+
+<div style="page-break-after: always"></div>
+
+```c
+/**
+ * @brief Định nghĩa bảng task 
+ */
+
+task_norm_t app_task_table[] = {
+  { CIEDPC_TASK_NORM_USR_ID,  CIEDPC_TASK_PRI_LEVEL_8, task_norm_usr_handler, {0}, usr_q_mem  },
+  { TASK_NORM_A_ID,           CIEDPC_TASK_PRI_LEVEL_7, task_norm_a_handler,   {0}, a_q_mem    },
+  { TASK_NORM_B_ID,           CIEDPC_TASK_PRI_LEVEL_6, task_norm_b_handler,   {0}, b_q_mem    },
+  { CIEDPC_TASK_NORM_EOT_ID,  CIEDPC_TASK_PRI_LEVEL_0, NULL,                  {0}, NULL       }
+};
+
+task_poll_t app_poll_table[] = {
+  { CIEDPC_TASK_POLL_MEMRP_ID , 0, task_poll_memrp_handler },
+  { CIEDPC_TASK_POLL_EOT_ID, 0, NULL }
+};
+
+/**
+ * @brief Định nghĩa handler cho task USR, task A và task B
+ */
+
+void task_norm_usr_handler(ciedpc_msg_t* msg) {
+  if (msg->sig == SIG_USR_START) {
+    printf("[USR] Received START signal. Sending message to Task A...\n");
+    ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(TASK_NORM_A_ID, SIG_USR_START, 0);
+    ciedpc_task_norm_post_msg(TASK_NORM_A_ID, msg_to_a);
+    system_action_count++;
+  } else if (msg->sig == SIG_USR_STOP) {
+    printf("[USR] Received STOP signal. Stopping the system...\n");
+    // Thực hiện các hành động cần thiết để dừng hệ thống, có thể là gửi tín hiệu đến các tác vụ khác để dừng chúng
+    system_action_count++;
+  }
+}
+```
+
+<div style="page-break-after: always"></div>
+
+```c
+void task_norm_a_handler(ciedpc_msg_t* msg) {
+  switch (msg->sig) {
+  case SIG_USR_START:
+    printf("[Task A] Received START signal from USR. Sending message to Task B...\n");
+    ciedpc_msg_t* msg_to_b = ciedpc_msg_alloc(TASK_NORM_B_ID, SIG_TSK_A_TO_B, sizeof(char*));
+    ciedpc_msg_set_data_ref(msg_to_b, (char*)&data_a_to_b); // Truyền địa chỉ của chuỗi dữ liệu
+    ciedpc_task_norm_post_msg(TASK_NORM_B_ID, msg_to_b);
+    printf("[Task A] Message sent to Task B. Waiting for response...\n");
+    system_action_count++;
+    break;
+  case SIG_TSK_B_TO_A:
+    printf("[Task A] Received message from Task B\n");
+    uintptr_t received_addr = (uintptr_t)(*(char**)(msg->data));
+    char* final_str = *(char**)received_addr;
+    printf("[Task A] Content: %s\n", final_str);
+    printf("[Task A] Sending STOP signal to USR...\n");
+    ciedpc_msg_t* stop_msg = ciedpc_msg_alloc(CIEDPC_TASK_NORM_USR_ID, SIG_USR_STOP, 0);
+    ciedpc_task_norm_post_msg(CIEDPC_TASK_NORM_USR_ID, stop_msg);
+    printf("[Task A] Sent STOP signal to USR. Exiting...\n");
+    system_action_count++;
+    break;
+  default:
+    break;
+  }
+}
+```
+
+<div style="page-break-after: always"></div>
+
+```c
+void task_norm_b_handler(ciedpc_msg_t* msg) {
+  switch (msg->sig) {
+  case SIG_TSK_A_TO_B:
+    printf("[Task B] Received message from Task A.\n");
+    uintptr_t received_addr = (uintptr_t)(*(char**)(msg->data));
+    char* final_str = *(char**)received_addr;
+    printf("[Task B] Content: %s\n", final_str);
+    printf("[Task B] Sending message back to Task A...\n");
+    ciedpc_msg_t* msg_to_a = ciedpc_msg_alloc(TASK_NORM_A_ID, SIG_TSK_B_TO_A, sizeof(char*));
+    ciedpc_msg_set_data_ref(msg_to_a, (char*)&data_b_to_a);
+    /**
+     * @brief Thử nghiệm việc truyền địa chỉ làm dữ liệu của tin nhắn,
+     *        Giảm tải bộ nhớ bằng cách không sao chép dữ liệu mà chỉ truyền địa chỉ của biến chứa dữ liệu,
+     */
+    ciedpc_task_norm_post_msg(TASK_NORM_A_ID, msg_to_a);
+    printf("[Task B] Message sent back to Task A. Waiting for next message...\n");
+    system_action_count++;
+    break;
+  default:
+    break;
+  }
+}
+
+void task_poll_memrp_handler() {
+  pal_memrp_report(&(pal_memrp_info_t){ .type = CIEDPC_MSG_TYPE_BLANK});
+  pal_memrp_report(&(pal_memrp_info_t){ .type = CIEDPC_MSG_TYPE_ALLOC});
+  pal_memrp_report(&(pal_memrp_info_t){ .type = CIEDPC_MSG_TYPE_EXTAL});
+  pal_memrp_report(&(pal_memrp_info_t){ .type = CIEDPC_MSG_TYPE_ISR});
+  ui32 rom_used = 0x0u;
+  ui32 ram_used = 0x0u;
+  ui32 stack_curr = 0x0u;
+  pal_memrp_get_sys_info(&rom_used, &ram_used, &stack_curr);
+  ciedpc_task_poll_set_ability(CIEDPC_TASK_POLL_MEMRP_ID, false);
+  system_action_count++;
+}
+
+/**
+ * @brief Định nghĩa các hàm on-entry/exit cho các trạng thái của TSM (nếu có)
+ */
+
+/**
+ * @brief Định nghĩa các state handler cho FSM của task USR, task A và task B (nếu có)
+ */
+
+```
+
+<div style="page-break-after: always"></div>
+
+Ở file `main.c`, STM32CubeMX đã tự động tạo ra hàm `main()` và các hàm khởi tạo hệ thống, do đó người dùng chỉ cần thêm vào phần khởi tạo ứng dụng và vòng lặp chính để chạy scheduler.
+
+## VI. Cài đặt CIEDPC trên STM32 project với STM32CubeIDE
+
+Lưu ý: các hướng dẫn này dựa theo cấu hình của Linux trên STM32. Do đó sẽ có một số bước cấu hình câu lệnh khác so với Windows, tuy nhiên về logic thì vẫn tương tự nhau.
+
+Sau khi hoàn thiện các bước tạo project, người dùng có thể tham khảo cách cài đặt CIEDPC vào project STM32 như sau:
+
+Tại thư mục chứa project của STM32, ta thực hiện clone CIEDPC repo:
+
+```bash
+git clone https://github.com/1811htsang/CIEDPC-Custom-Independent-Event-Driven-Programming-Core.git <Tên thư mục mong muốn - ví dụ: ciedpc>
+```
+
+Để tránh các rắc rối về version control khi đã clone CIEDPC vào project của STM32 thì ta nên xóa đi thư mục `.git` trong thư mục CIEDPC vừa clone:
+
+```bash
+cd <Tên thư mục vừa clone - ví dụ: ciedpc>
+rm -rf .git
+```
+
+Khi hoàn thành, ta sẽ có cấu trúc thư mục gốc như sau:
+
+![img1](./images/image1.png)
+
+Sau đó, trên STM32 project, ta tiến hành thêm các file header và source của CIEDPC vào project để có thể sử dụng được các API của CIEDPC trong quá trình phát triển ứng dụng.
+
+Chọn `Project` -> `Properties` -> `C/C++ General` -> `Paths and Symbols` -> `Includes` -> `GNU C` -> `Add...` và thêm đường dẫn đến thư mục chứa các file header của CIEDPC (ví dụ: `$(PROJECT_DIR)/<Tên thư mục vừa clone - ví dụ: ciedpc>/include`).
+
+<div style="page-break-after: always"></div>
+
+Tham khảo theo hình dưới đây:
+
+![img2](./images/image2.png)
+
+Lưu ý rằng, sử dụng đường dẫn khái quát nhằm mục đích include toàn bộ các file header & implementation sẽ không hỗ trợ trên cấu hình của STM32CubeIDE. Do đó cần phải thêm từng file header và source cụ thể vào project để đảm bảo rằng các API của CIEDPC có thể được sử dụng một cách chính xác trong quá trình phát triển ứng dụng trên STM32.
+
+Sau đó, bên cạnh mục `Includes`, ta bổ sung cấu hình của `Source Location` để thêm đường dẫn đến thư mục chứa các file source của CIEDPC (ví dụ: `$(PROJECT_DIR)/<Tên thư mục vừa clone - ví dụ: ciedpc>/src`). Cần đảm bảo loại bỏ các thư mục test ra khỏi cấu hình này để tránh việc biên dịch các file test không cần thiết vào project của STM32, điều này sẽ giúp giảm thiểu kích thước của firmware và tránh các lỗi biên dịch không mong muốn do các file test có thể chứa các phần code không tương thích với môi trường STM32.
+
+<div style="page-break-after: always"></div>
+
+Tham khảo theo hình dưới đây:
+
+![img3](./images/image3.png)
 
 <div style="page-break-after: always"></div>
 
