@@ -1,4 +1,12 @@
-﻿#ifndef __APP_CFG_H__
+﻿/**
+ * @file app_cfg.h
+ * @author Shang Huang
+ * @brief Application configuration header file
+ * @version 0.1
+ * @date 2026-05-12
+ * @copyright MIT License
+ */
+#ifndef __APP_CFG_H__
 	#define __APP_CFG_H__
 
 	/**
