@@ -44,9 +44,9 @@
 ### Phiên bản 1.0.2
 
 - [ ] Hoàn thiện test case để thống nhất định dạng và quy trình testing cho các module của lõi CIEDPC.
-- [ ] Bổ sung thiết kế 1 internal console để thay thế printf debugging trong để hỗ trợ kit không có cổng UART.
-- [ ] Thiết kế getter để truyền dữ liệu từ internal console ra ngoài màn hình hoặc UART.
-- [ ] Ra mắt phiên bản 1.0.2 của lõi CIEDPC với đầy đủ test case và tài liệu hướng dẫn sử dụng internal console.
+- [ ] Bổ sung thiết kế 1 internal logger (itnlog) để thay thế printf debugging trong để hỗ trợ kit không có cổng UART.
+- [ ] Thiết kế getter để truyền dữ liệu từ internal logger ra ngoài màn hình hoặc UART.
+- [ ] Ra mắt phiên bản 1.0.2 của lõi CIEDPC với đầy đủ test case và tài liệu hướng dẫn sử dụng internal logger.
 
 ### Phiên bản 1.0.3
 
