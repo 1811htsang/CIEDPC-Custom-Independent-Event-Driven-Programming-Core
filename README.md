@@ -6,42 +6,45 @@
 ![Platform: Agnostic](https://img.shields.io/badge/Platform-STM32%20|%20ESP32%20|%20Linux-green.svg)
 ![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
 
-**CIEDPC** là một hạt nhân (Kernel) lập trình hướng sự kiện siêu nhẹ, hiệu suất cao, được thiết kế tham khảo theo mô hình **Active Object** với các tùy chỉnh bổ sung. Mục tiêu cốt lõi là đạt được khả năng **"Zero-Touch Porting"** – cho phép di chuyển toàn bộ logic ứng dụng giữa các nền tảng (như từ STM32 sang Linux mô phỏng) mà không cần thay đổi mã nguồn lõi.
+**CIEDPC** is an ultra-lightweight, high-performance event-driven programming kernel, inspired by the **Active Object** model with additional custom enhancements. Its core objective is to achieve **"Zero-Touch Porting"**: moving the entire application logic across platforms (for example, from STM32 to Linux simulation) without modifying the core source code.
 
 ---
 
-## 🚀 Tính năng nổi bật
+## 🚀 Key Features
 
-- **Kiến trúc Tách biệt Tuyệt đối:** Phân tầng rõ rệt giữa App Layer - CIEDPC Core - PAL (Platform Abstraction Layer).
-- **Bộ lập lịch O(1):** Lập lịch đa nhiệm ưu tiên dựa trên Bitmask, tối ưu hóa tốc độ phản ứng với sự kiện.
-- **Quản lý Bộ nhớ Tĩnh (Static Memory Pools):** Triệt tiêu hoàn toàn hiện tượng phân mảnh RAM (Fragmentation), đảm bảo tính đoán định (Deterministic) cho hệ thống Real-time.
-- **Hệ thống Tin nhắn Hợp nhất (Unified Messaging):** Tự động thích ứng kích thước con trỏ (4-byte trên 32-bit, 8-byte trên 64-bit), hỗ trợ cả truyền tham trị (Value) và tham chiếu (Zero-copy).
-- **Cơ chế "Lớp vỏ & Lõi" (TSM & FSM):**
-  - **TSM (Table-driven):** Quản lý chế độ vận hành lớn với Entry/Exit actions tự động.
-  - **FSM (Pointer-driven):** Xử lý logic nghiệp vụ chi tiết linh hoạt.
-- **Simulation Ready:** Hỗ trợ mô phỏng hoàn hảo trên Linux POSIX giúp kiểm thử logic 100% trước khi nạp xuống phần cứng.
+- **Strictly Layered Architecture:** Clear separation between App Layer - CIEDPC Core - PAL (Platform Abstraction Layer).
+- **O(1) Scheduler:** Priority-based multitasking scheduler using bitmasks for fast event reaction.
+- **Static Memory Pools:** Completely eliminates RAM fragmentation and guarantees deterministic behavior for real-time systems.
+- **Unified Messaging System:** Automatically adapts pointer size (4-byte on 32-bit, 8-byte on 64-bit), supporting both value transfer and reference transfer (zero-copy).
+- **"Shell & Core" Mechanism (TSM & FSM):**
+  - **TSM (Table-driven):** Manages high-level operating modes with automatic Entry/Exit actions.
+  - **FSM (Pointer-driven):** Handles detailed business logic with high flexibility.
+- **Simulation Ready:** Fully supports Linux POSIX simulation to validate logic end-to-end before deploying to hardware.
 
 ---
 
-## 🏗 Kiến trúc Hệ thống
+## 🏗 System Architecture
 
 ```mermaid
 graph TD
     subgraph "Application Layer"
-        App[Tasks Logic & FSM]
+        App[Tasks Logic & FSM/TSM]
     end
 
-    subgraph "CIEDPC Core (Hardware Agnostic)"
-        Shed[Priority Scheduler]
+    subgraph "Core Design (Hardware Agnostic)"
+        Sched[Priority Scheduler]
         Msg[Message Manager]
-        Timer[Timer Service]
+        CoreTimer[Timer Service]
         SM[TSM/FSM Engine]
     end
 
     subgraph "PAL Layer (Porting Interface)"
         Sync[Concurrency/Critical]
         HWT[Hardware Tick]
-        Math[Math Accel/CLZ]
+        subgraph "Service"
+            PalTimer[timer]
+            PalMemrp[memrp]
+        end
     end
 
     App -->|post_msg / timer_set| CIEDPC
@@ -51,47 +54,47 @@ graph TD
 
 ---
 
-## 📂 Cấu trúc thư mục
+## 📂 Directory Structure
 
 ```text
 CIEDPC/
-├── core/                 # Định nghĩa và triển khai logic chính của CIEDPC
+├── core/                 # Defines and implements the core CIEDPC logic
 │   ├── inc/              # ciedpc_msg.h, ciedpc_task.h, ciedpc_timer.h, ciedpc_fsm.h, ciedpc_tsm.h
-│   │   └── ciedpc_core.h # Định nghĩa các tín hiệu, hằng số và cấu trúc dữ liệu cốt lõi của CIEDPC
-│   └── src/              # Triển khai logic scheduler, timer engine, message manager
-├── pal/                  # BACKEND (Lớp trừu tượng)
-│   ├── pal_core.h        # Khai báo thống nhất chung cho toàn bộ PAL và các dịch vụ hệ thống
-│   ├── services/         # Hardware Services (Mapping phần cứng)
-│   │   ├── timer/        # pal_timer.h chứa các khai báo API timer để tự triển khai trên từng nền tảng
-│   │   └── memrp/        # pal_memrp.c/h chứa các hàm hỗ trợ memory profiling
-│   └── arch/             # Implementation (Mã nguồn chi tiết từng chip)
-│       ├── stm32/        # stm32_arch.c/h chứa các hàm triển khai cho STM32
-│       └── linux/        # linux_arch.c/h chứa các hàm triển khai cho môi trường giả lập trên Linux
-├── app/                  # Định nghĩa logic ứng dụng, bao gồm các tác vụ và FSM do người dùng tạo ra
-│   ├── config/           # Chứa cấu hình ứng dụng và cấu hình người dùng
-│   ├── task/             # Định nghĩa các tác vụ (tasks) và FSM của người dùng
-│   ├── declaration/      # Implementation chính của logic hoạt động của ứng dụng người dùng
-│   └── interface/        # Định nghĩa và triển khai cổng giao tiếp với tín hiệu bên ngoài (task_if)
-├── common/               # Các tiện ích và cấu trúc dữ liệu chung được sử dụng trong toàn bộ dự án
-│   └── container/        # Các cấu trúc dữ liệu như FIFO, Ring Buffer, Linked List được triển khai thuần C
-└── test/                 # Các bài kiểm tra tích hợp (Integration Tests) để đảm bảo tính đúng đắn của hệ thống
-    ├── test01/           # Test cơ bản với các tác vụ ISR và TSM
-    ├── test02/           # Test với các tính năng như message pooling và memrp
-    └── test03/           # Test tích hợp FSM phức tạp
+│   │   └── ciedpc_core.h # Defines core CIEDPC signals, constants, and data structures
+│   └── src/              # Implements scheduler, timer engine, and message manager
+├── pal/                  # BACKEND (abstraction layer)
+│   ├── pal_core.h        # Unified declarations for PAL and system services
+│   ├── services/         # Hardware services (hardware mapping)
+│   │   ├── timer/        # pal_timer.h contains timer API declarations for per-platform implementation
+│   │   └── memrp/        # pal_memrp.c/h contains memory profiling support functions
+│   └── arch/             # Implementation (chip/platform-specific source)
+│       ├── stm32/        # stm32_arch.c/h contains STM32-specific implementation
+│       └── linux/        # linux_arch.c/h contains Linux simulation implementation
+├── app/                  # User application logic, including user-defined tasks and FSMs
+│   ├── config/           # Application and user configuration
+│   ├── task/             # User task and FSM definitions
+│   ├── declaration/      # Main implementation of user application behavior
+│   └── interface/        # Definition and implementation of external signal interface (task_if)
+├── common/               # Shared utilities and data structures used across the project
+│   └── container/        # Pure C data structures such as FIFO, Ring Buffer, Linked List
+└── test/                 # Integration tests to verify system correctness
+    ├── test01/           # Basic tests with ISR tasks and TSM
+    ├── test02/           # Tests for features such as message pooling and memrp
+    └── test03/           # Integrated complex FSM tests
 ```
 
 ---
 
-## 🛠 Hướng dẫn Khởi chạy nhanh (Linux Simulation)
+## 🛠 Quick Start (Linux Simulation)
 
-CIEDPC hỗ trợ chạy mô phỏng ngay trên môi trường Linux để kiểm tra logic.
+CIEDPC supports running simulations directly on Linux to validate logic.
 
-### 1. Yêu cầu
+### 1. Requirements
 
 - GCC Compiler
 - CMake (version 3.10+)
 
-### 2. Biên dịch
+### 2. Build
 
 ```bash
 mkdir build && cd build
@@ -99,51 +102,51 @@ cmake -DPLATFORM=LINUX ..
 make
 ```
 
-### 3. Chạy Integration Test
+### 3. Run Integration Test
 
 ```bash
 ./ciedpc_test
 ```
 
-*Kết quả sẽ hiển thị luồng chuyển trạng thái TSM/FSM và hoạt động của Timer Service trên Terminal.*
+*The result will display TSM/FSM state transitions and Timer Service activity in the terminal.*
 
 ---
 
-## 📖 Nguyên lý "Lớp vỏ & Lõi"
+## 📖 "Shell & Core" Principle
 
-CIEDPC giải quyết bài toán phức tạp bằng cách lồng ghép hai loại máy trạng thái:
+CIEDPC solves complex logic by combining two types of state machines:
 
-1. **TSM (Macro-level):** Quản lý các "Chế độ" (ví dụ: `IDLE`, `RUNNING`, `ERROR`). Nó tự động dọn dẹp tài nguyên khi Task đổi chế độ thông qua hàm `on_exit`.
-2. **FSM (Micro-level):** Quản lý "Hành vi" bên trong từng chế độ (ví dụ: giải mã gói tin UART byte-by-byte).
+1. **TSM (Macro-level):** Manages high-level "modes" (for example: `IDLE`, `RUNNING`, `ERROR`). It automatically cleans up resources when a task changes mode via `on_exit`.
+2. **FSM (Micro-level):** Manages detailed "behavior" inside each mode (for example: decoding UART packets byte-by-byte).
 
-Cơ chế này giúp loại bỏ hoàn toàn các biến cờ (`flags`) lộn xộn, biến mã nguồn trở thành một bản mô tả sơ đồ logic sạch sẽ.
-
----
-
-## 📝 Tài liệu hướng dẫn
-
-Thông tin chi tiết về API, cách quy hoạch Pool bộ nhớ và hướng dẫn Porting sang các MCU khác có thể tìm thấy trong tài liệu [User Manual (PDF)](./docs/user-manual.md).
+This mechanism completely removes tangled flag-based logic and turns the codebase into a clean, diagram-like representation of behavior.
 
 ---
 
-## 🤝 Đóng góp
+## 📝 Documentation
 
-Dự án được phát triển bởi **Shang Huang (Huỳnh Thanh Sang)**. Mọi đóng góp về lỗi (bugs) hoặc đề xuất tính năng (features) xin vui lòng tạo Issue trên GitHub.
+Detailed information about APIs, memory pool planning, and porting to other MCUs can be found in the [User Manual (PDF)](./docs/user-manual.md). Please note that this documentation is presented in Vietnamese to better serve the local developer community, but it can be translated to English in the future if there is demand.
+
+---
+
+## 🤝 Contributing
+
+This project is developed by **Shang Huang (Huynh Thanh Sang)**. Contributions for bug reports or feature proposals are welcome via GitHub Issues.
 
 **License:** MIT.
 
 ---
 
-## Roadmap tương lai
+## Future Roadmap
 
-Đây là các lộ trình triển khai dự kiến trong tương lai để hoàn thiện và mở rộng tính năng của CIEDPC:
+The following roadmap items are planned to further complete and expand CIEDPC:
 
-- Triển khai PAL services cho RAM profiling.
-- Triển khai PAL services cho Debug.
-- Triển khai PAL services cho Tracing và Fatal Error Handling.
-- Bổ sung các xử lý cho giao diện thu thập tín hiệu từ bên ngoài.
-- Mở rộng thêm các bài kiểm tra tích hợp (Integration Tests) để đảm bảo tính ổn định của hệ thống.
-- Phát triển thêm các ví dụ ứng dụng thực tế để minh họa cách sử dụng CIEDPC trong các tình huống khác nhau.
-- Hoàn thiện tài liệu hướng dẫn chi tiết về cách sử dụng và porting CIEDPC sang các nền tảng khác nhau.
+- Implement PAL services for RAM profiling.
+- Implement PAL services for debugging.
+- Implement PAL services for tracing and fatal error handling.
+- Add processing support for external signal collection interfaces.
+- Expand integration tests to further improve system stability.
+- Develop more real-world application examples to demonstrate CIEDPC usage in practical scenarios.
+- Complete detailed documentation for usage and porting CIEDPC to different platforms.
 
-Lưu ý rằng các mốc lộ trình này không đảm bảo sẽ được thực hiện hoặc có thể thay đổi tùy thuộc vào tình hình phát triển. Tuy nhiên chúng sẽ được cập nhật thường xuyên để phản ánh tiến độ và kế hoạch phát triển của dự án.
+Please note that these roadmap milestones are not guaranteed and may change depending on development conditions. They will be updated regularly to reflect ongoing progress and planning.
