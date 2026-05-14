@@ -45,12 +45,16 @@
 ### Phiên bản 1.0.2
 
 - [x] Hoàn thiện test case để thống nhất định dạng và quy trình testing cho các module của lõi CIEDPC. Đã thực hiện điều này trong quá trình phát triển Core.
-- [ ] Bổ sung thiết kế 1 internal logger (itnlog) để thay thế printf debugging trong để hỗ trợ kit không có cổng UART.
-- [ ] Thiết kế getter để truyền dữ liệu từ internal logger ra ngoài màn hình hoặc UART.
+- [x] Bổ sung thiết kế 1 internal logger (itnlog) để thay thế printf debugging trong để hỗ trợ kit không có cổng UART.
+- [ ] Triển khai thiết kế logger với inline snapshot để lưu trực tiếp tsk/sig/fsm/tsm/msg và khai thác ring buffer để lưu log nội bộ trên RAM/Flash.
+- [ ] Bổ sung logic thiết kế chống ghi đè với checksum trên từng ô log để đảm bảo tính toàn vẹn của log khi sử dụng cơ chế ghi đè vòng tròn.
+- [ ] Bổ sung tài liệu hướng dẫn sử dụng internal logger, bao gồm cách cấu hình, cách sử dụng API để ghi log và các rule để đảm bảo log được ghi chính xác và có thể phân tích hiệu quả.
 - [ ] Ra mắt phiên bản 1.0.2 của lõi CIEDPC với đầy đủ test case và tài liệu hướng dẫn sử dụng internal logger.
 
 ### Phiên bản 1.0.3
 
+- [ ] Thiết kế getter để truyền dữ liệu từ internal logger ra ngoài màn hình hoặc UART.
+- [ ] Bổ sung các triển khai lớp internal của printf để hỗ trợ việc xuất log
 - [ ] Nâng cấp thiết kế phân phối task với API cho phép thực hiện cơ chế Priority Escalation để cho phép một task có thể tạm thời tăng độ ưu tiên của mình khi cần thiết và hoàn trả độ ưu tiên về mức ban đầu sau khi hoàn thành công việc khẩn cấp.
 - [ ] Bổ sung tài liệu trình bày về cơ chế Priority Escalation và Scheduling Policy của CIEDPC để làm rõ cách thức hoạt động và lợi ích của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
 - [ ] Bổ sung tài liệu trình bày về giới hạn mà CIEDPC có thể được sử dụng trong hệ thống nhúng và khi nào nên cân nhắc sử dụng một hệ điều hành nhúng đầy đủ thay vì CIEDPC, nhằm giúp người dùng hiểu rõ hơn về phạm vi ứng dụng và lựa chọn phù hợp cho dự án của họ.
