@@ -28,23 +28,20 @@
 ```mermaid
 graph TD
     subgraph "Application Layer"
-        App[Tasks Logic & FSM/TSM]
+        App[Tasks Logic & FSM]
     end
 
-    subgraph "Core Design (Hardware Agnostic)"
-        Sched[Priority Scheduler]
+    subgraph "CIEDPC Core (Hardware Agnostic)"
+        Shed[Priority Scheduler]
         Msg[Message Manager]
-        CoreTimer[Timer Service]
+        Timer[Timer Service]
         SM[TSM/FSM Engine]
     end
 
     subgraph "PAL Layer (Porting Interface)"
         Sync[Concurrency/Critical]
         HWT[Hardware Tick]
-        subgraph "Service"
-            PalTimer[timer]
-            PalMemrp[memrp]
-        end
+        Math[Math Accel/CLZ]
     end
 
     App -->|post_msg / timer_set| CIEDPC
