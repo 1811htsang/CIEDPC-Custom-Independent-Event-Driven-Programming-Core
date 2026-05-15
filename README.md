@@ -136,14 +136,9 @@ This project is developed by **Shang Huang (Huynh Thanh Sang)**. Contributions f
 
 ## Future Roadmap
 
-The following roadmap items are planned to further complete and expand CIEDPC:
+The roadmap and development direction will be updated regularly in the documentation branch `docs`, file `to-do.md` to provide a clear overview of the project's evolution and upcoming features. Key points include:
 
-- Implement PAL services for RAM profiling.
-- Implement PAL services for debugging.
-- Implement PAL services for tracing and fatal error handling.
-- Add processing support for external signal collection interfaces.
-- Expand integration tests to further improve system stability.
-- Develop more real-world application examples to demonstrate CIEDPC usage in practical scenarios.
-- Complete detailed documentation for usage and porting CIEDPC to different platforms.
-
-Please note that these roadmap milestones are not guaranteed and may change depending on development conditions. They will be updated regularly to reflect ongoing progress and planning.
+- Added a development roadmap to transform CIEDPC from an EDP core into a complete OS based on Semantic Versioning standards.
+- Added comparisons of CIEDPC's design evaluation with the standard QP/C model of Miro Samek.
+- Added documentation to mention the design transition process from EPCB-vn AKEDP dependent to CIEDPC.
+Convention: Document changes may be released as patch versions if they directly affect the release deliverable or the system's usability.
